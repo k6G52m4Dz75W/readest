@@ -110,6 +110,10 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       option: 'Sans-serif',
       label: _('Sans-Serif Font'),
     },
+    {
+      option: 'Monospace',
+      label: _('Monospace Font'),
+    },
   ];
 
   const osPlatform = getOSPlatform();
@@ -341,7 +345,10 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
       </BoxedList>
 
       <BoxedList title={_('Font Family')}>
-        <SettingsRow label={_('Default Font')} data-setting-id='settings.font.defaultFont'>
+        <SettingsRow
+          label={_('Preferred Font Category')}
+          data-setting-id='settings.font.defaultFont'
+        >
           <FontDropdown
             options={fontFamilyOptions}
             selected={defaultFont}
@@ -365,7 +372,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         <FontFace
           family='serif'
           label={_('Serif Font')}
-          options={[...customFonts, ...SERIF_FONTS.filter(filterNonFreeFonts), ...CJK_SERIF_FONTS]}
+          options={[...customFonts, ...SERIF_FONTS.filter(filterNonFreeFonts)]}
           moreOptions={sysFonts}
           selected={serifFont}
           onSelect={setSerifFont}
@@ -374,11 +381,7 @@ const FontPanel: React.FC<SettingsPanelPanelProp> = ({ bookKey, onRegisterReset 
         <FontFace
           family='sans-serif'
           label={_('Sans-Serif Font')}
-          options={[
-            ...customFonts,
-            ...SANS_SERIF_FONTS.filter(filterNonFreeFonts),
-            ...CJK_SANS_SERIF_FONTS,
-          ]}
+          options={[...customFonts, ...SANS_SERIF_FONTS.filter(filterNonFreeFonts)]}
           moreOptions={sysFonts}
           selected={sansSerifFont}
           onSelect={setSansSerifFont}
