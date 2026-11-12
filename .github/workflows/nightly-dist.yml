@@ -1,0 +1,135 @@
+name: Nightly dist
+
+on:
+  schedule:
+    - cron: '30 21 * * *' # daily 21:30 UTC — staggered from upstream's 22:00
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nightly-dist
+  cancel-in-progress: false
+
+jobs:
+  sync-dist:
+    # dist = upstream main + local build adjustments. Merge upstream main into
+    # dist each night so the build legs track the latest upstream. A merge
+    # conflict means upstream touched the adjusted area — resolve by hand; the
+    # build legs are skipped by needs-failure.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dist
+          fetch-depth: 0
+      - name: Merge upstream/main into dist (keep fork .github) and push
+        run: |
+          git config user.name "nightly-dist-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/readest/readest.git || true
+          git fetch upstream main
+          BEFORE=$(git rev-parse HEAD)
+          git merge upstream/main --no-edit || { echo "::error::merge conflict — resolve by hand"; git merge --abort 2>/dev/null || true; exit 1; }
+          # GITHUB_TOKEN has no `workflows` permission: keep the fork's own .github
+          # exactly as-is so the push is never refused for workflow-file changes.
+          git restore --source="$BEFORE" --staged --worktree -- .github || true
+          git clean -fd -- .github >/dev/null 2>&1 || true
+          git commit -am "dist: keep fork .github over upstream's" 2>/dev/null || echo "no post-merge .github adjustments"
+          git push origin dist
+
+  windows-x64:
+    needs: sync-dist
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dist
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/readest-app/src-tauri
+      - name: Init submodules and install dependencies
+        run: |
+          git submodule update --init --depth 1
+          pnpm install --frozen-lockfile
+      - name: Build portable exe
+        working-directory: apps/readest-app
+        run: pnpm tauri build --no-bundle
+      - name: Upload to the rolling nightly release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view nightly --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create nightly --repo "$GITHUB_REPOSITORY" \
+              --title "Readest dist — nightly" \
+              --notes "Automated personal build of the dist branch, based on Readest (AGPL-3.0). Source: this repository." \
+              --latest
+          gh release upload nightly target/release/readest.exe --clobber --repo "$GITHUB_REPOSITORY"
+
+  android-arm64:
+    needs: sync-dist
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: dist
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/readest-app/src-tauri
+      - name: Init submodules and install dependencies
+        run: |
+          git submodule update --init --depth 1
+          pnpm install --frozen-lockfile
+      - name: Init android project (fresh, like upstream nightly)
+        working-directory: apps/readest-app
+        run: |
+          rm -rf src-tauri/gen/android
+          pnpm tauri android init
+          git checkout . || true
+      - name: Write keystore.properties from secrets
+        working-directory: apps/readest-app/src-tauri/gen/android
+        env:
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "keyAlias=$ANDROID_KEY_ALIAS" > keystore.properties
+          echo "password=$ANDROID_KEY_PASSWORD" >> keystore.properties
+          echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
+          base64 -d <<< "$ANDROID_KEY_BASE64" > "$RUNNER_TEMP/keystore.jks"
+      - name: Build arm64 APK
+        working-directory: apps/readest-app
+        run: |
+          export NDK_HOME="$ANDROID_NDK_LATEST_HOME"
+          pnpm tauri android build --target aarch64
+      - name: Upload to the rolling nightly release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload nightly \
+            apps/readest-app/src-tauri/gen/android/app/build/outputs/apk/arm64/release/app-arm64-release.apk \
+            --clobber --repo "$GITHUB_REPOSITORY"
