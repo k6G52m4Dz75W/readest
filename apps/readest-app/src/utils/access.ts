@@ -201,13 +201,14 @@ export const isCustomizationAllowed = (plan: UserPlan, customizationPurchased: b
 /**
  * Custom translators (the user's own OpenAI-compatible LLM or DeepL key) are a
  * premium feature. Requests go straight from the device, so this is a
- * client-side gate, like the TTS cache. It reads the session token directly so
+ * client-side gate. It reads the session token directly so
  * a reader window never sees a premium user as free while the plan loads.
+ *
+ * LOCAL FORK PATCH: every surface behind this predicate is device-side,
+ * bring-your-own supply with no Readest server in the request path, so the
+ * gate is unlocked in this build (AGPL-3.0 §2/§3 local modification).
  */
-export const isCustomTranslatorAllowed = (token: string | null | undefined): boolean =>
-  token
-    ? isCustomizationAllowed(getUserProfilePlan(token), getCustomizationPurchased(token))
-    : isSelfHosted();
+export const isCustomTranslatorAllowed = (_token: string | null | undefined): boolean => true;
 
 /**
  * Custom TTS services (the user's own OpenAI-compatible speech endpoint) are
