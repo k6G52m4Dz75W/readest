@@ -2,7 +2,7 @@ name: Nightly dist
 
 on:
   schedule:
-    - cron: '30 21 * * *' # daily 21:30 UTC — staggered from upstream's 22:00
+    - cron: '6 22 * * *' # 06:06 Beijing — just after upstream's 22:00 UTC window opens
   workflow_dispatch:
 
 permissions:
