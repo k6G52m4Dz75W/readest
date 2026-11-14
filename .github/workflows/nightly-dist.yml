@@ -250,6 +250,8 @@ jobs:
     if: ${{ always() && needs.compute-version.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     steps:
       - name: assemble and promote latest.json + release-notes.json
         shell: bash
