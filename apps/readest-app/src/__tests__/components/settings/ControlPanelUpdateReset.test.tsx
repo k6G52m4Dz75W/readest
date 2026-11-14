@@ -98,10 +98,10 @@ describe('Behavior update settings reset', () => {
     await act(async () => registerReset.mock.calls[0]![0]());
 
     expect.soft(autoCheckSwitch().checked).toBe(true);
-    expect.soft(nightlySwitch().checked).toBe(false);
+    expect.soft(nightlySwitch().checked).toBe(true);
     expect.soft(savedSettings()).toMatchObject({
       autoCheckUpdates: true,
-      updateChannel: 'stable',
+      updateChannel: 'nightly',
       telemetryEnabled: false,
       gamepadEnabled: false,
     });
@@ -110,14 +110,14 @@ describe('Behavior update settings reset', () => {
     useSettingsStore.setState({ settings: savedSettings() });
     render(<ControlPanel bookKey='' onRegisterReset={() => {}} />);
     expect(autoCheckSwitch().checked).toBe(true);
-    expect(nightlySwitch().checked).toBe(false);
+    expect(nightlySwitch().checked).toBe(true);
   });
 
   it('resets preferences changed after the reset callback was registered', async () => {
     useSettingsStore.getState().setSettings({
       ...useSettingsStore.getState().settings,
       autoCheckUpdates: true,
-      updateChannel: 'stable',
+      updateChannel: 'nightly',
     });
     const registerReset = vi.fn<(reset: () => void) => void>();
     render(<ControlPanel bookKey='' onRegisterReset={registerReset} />);
@@ -127,14 +127,14 @@ describe('Behavior update settings reset', () => {
       fireEvent.click(nightlySwitch());
     });
     expect(autoCheckSwitch().checked).toBe(false);
-    expect(nightlySwitch().checked).toBe(true);
+    expect(nightlySwitch().checked).toBe(false);
 
     await act(async () => registerReset.mock.calls[0]![0]());
     await act(async () => registerReset.mock.calls[0]![0]());
 
     expect(autoCheckSwitch().checked).toBe(true);
-    expect(nightlySwitch().checked).toBe(false);
-    expect(savedSettings()).toMatchObject({ autoCheckUpdates: true, updateChannel: 'stable' });
+    expect(nightlySwitch().checked).toBe(true);
+    expect(savedSettings()).toMatchObject({ autoCheckUpdates: true, updateChannel: 'nightly' });
   });
 
   it('leaves update preferences alone when the app has no updater', async () => {
