@@ -126,6 +126,11 @@ jobs:
               --title "Readest dist - nightly" \
               --notes-file notes.md --latest
           .github/scripts/retry.sh gh release upload nightly "Readest_${NIGHTLY_VERSION}_x64-portable.exe" --clobber --repo "$GITHUB_REPOSITORY"
+          # Prune: keep only the 7 newest x64 portable builds on the release.
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/releases/tags/nightly" \
+              --jq '[.assets[] | select(.name | endswith("_x64-portable.exe"))] | sort_by(.updated_at) | reverse | .[7:] | .[].id'); do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$id" && echo "pruned asset $id"
+          done
 
   # ---------------------------- ANDROID (arm64 apk) --------------------------
   android-arm64:
@@ -203,3 +208,8 @@ jobs:
             gh release create nightly --repo "$GITHUB_REPOSITORY" \
               --title "Readest dist - nightly" --latest
           .github/scripts/retry.sh gh release upload nightly "apps/readest-app/Readest_${NIGHTLY_VERSION}_arm64.apk" --clobber --repo "$GITHUB_REPOSITORY"
+          # Prune: keep only the 7 newest arm64 builds on the release.
+          for id in $(gh api "repos/$GITHUB_REPOSITORY/releases/tags/nightly" \
+              --jq '[.assets[] | select(.name | endswith("_arm64.apk"))] | sort_by(.updated_at) | reverse | .[7:] | .[].id'); do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$id" && echo "pruned asset $id"
+          done
