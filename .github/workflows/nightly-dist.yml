@@ -266,11 +266,14 @@ jobs:
           [ -n "$(ls -A frag 2>/dev/null)" ] || { echo "::error::no manifest fragments found — both build legs failed"; exit 1; }
           NOTES_TEXT=$(printf '%s' "$NOTES" | sed 's/^- //')
           [ -n "$NOTES_TEXT" ] || NOTES_TEXT="No new upstream commits in this build."
-          jq -s --arg version "$NIGHTLY_VERSION" --arg notes "$NOTES_TEXT" \
-            '{version: $version, pub_date: (now | todateiso8601), notes: $notes, platforms: (map(.platforms) | add)}' \
-            frag/*.json > latest.json
+          # Derive both timestamps from the Beijing-time stamp (YYYYMMDDHH) so
+          # pub_date and the changelog date always agree with the version stamp.
           STAMP="${NIGHTLY_VERSION##*-}"
           BUILD_DATE="${STAMP:0:4}-${STAMP:4:2}-${STAMP:6:2}"
+          PUB_DATE="${BUILD_DATE}T${STAMP:8:2}:00:00+08:00"
+          jq -s --arg version "$NIGHTLY_VERSION" --arg pub_date "$PUB_DATE" --arg notes "$NOTES_TEXT" \
+            '{version: $version, pub_date: $pub_date, notes: $notes, platforms: (map(.platforms) | add)}' \
+            frag/*.json > latest.json
           NOTES_ARRAY=$(printf '%s\n' "$NOTES_TEXT" | jq -R . | jq -s 'map(select(length > 0))')
           jq -n --arg version "$NIGHTLY_VERSION" --arg date "$BUILD_DATE" --argjson notes "$NOTES_ARRAY" \
             '{releases: {($version): {date: $date, notes: $notes}}}' > release-notes.json
