@@ -2,7 +2,7 @@ name: Nightly dist
 
 on:
   schedule:
-    - cron: '30 21 * * *' # daily 21:30 UTC — staggered from upstream's 22:00
+    - cron: '18 22 * * *' # 06:18 Beijing (22:18 UTC), off-peak minute
   workflow_dispatch:
 
 permissions:
@@ -13,12 +13,16 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Merge upstream/main into dist every night, keeping the fork's own .github
+  # (GITHUB_TOKEN cannot push workflow-file changes - hard platform rule).
+  # .github updates flow via the user's periodic local sync instead.
+  # Collect the upstream commit list since the last build for the release notes.
   sync-dist:
-    # dist = upstream main + local build adjustments. Merge upstream main into
-    # dist each night so the build legs track the latest upstream. A merge
-    # conflict means upstream touched the adjusted area — resolve by hand; the
-    # build legs are skipped by needs-failure.
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      notes: ${{ steps.notes.outputs.notes }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,108 +32,174 @@ jobs:
         run: |
           git config user.name "nightly-dist-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git remote add upstream https://github.com/readest/readest.git || true
+          git remote add upstream https://github.com/readest/readest.git
           git fetch upstream main
           BEFORE=$(git rev-parse HEAD)
-          git merge upstream/main --no-edit || { echo "::error::merge conflict — resolve by hand"; git merge --abort 2>/dev/null || true; exit 1; }
-          # GITHUB_TOKEN has no `workflows` permission: keep the fork's own .github
-          # exactly as-is so the push is never refused for workflow-file changes.
-          git restore --source="$BEFORE" --staged --worktree -- .github || true
-          git clean -fd -- .github >/dev/null 2>&1 || true
-          git commit -am "dist: keep fork .github over upstream's" 2>/dev/null || echo "no post-merge .github adjustments"
-          git push origin dist
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo "dist already contains upstream/main"
+          else
+            git merge upstream/main --no-edit || { echo "::error::merge conflict - resolve by hand"; exit 1; }
+            git restore --source="$BEFORE" --staged --worktree -- .github || true
+            git clean -fd -- .github >/dev/null 2>&1 || true
+            git commit -am "dist: keep fork .github over upstream's" 2>/dev/null || true
+            git push origin dist
+          fi
+      - name: Collect upstream commits since last build
+        id: notes
+        run: |
+          BEFORE=$(git log -1 --format=%P HEAD | awk '{print $1}')
+          [ -n "$BEFORE" ] || BEFORE=$(git rev-parse HEAD)
+          {
+            echo 'notes<<EOF'
+            git log --oneline --no-merges ${BEFORE}..HEAD | sed 's/^/- /'
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
 
-  windows-x64:
+  # Nightly version stamp mirrors upstream's nightly.yml: <base>-<YYYYMMDDHH>.
+  compute-version:
     needs: sync-dist
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
+    outputs:
+      nightly_version: ${{ steps.v.outputs.nightly_version }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: dist
-      - uses: pnpm/action-setup@v4
+      - id: v
+        run: |
+          BASE=$(node -p "require('./apps/readest-app/package.json').version")
+          STAMP=$(TZ=Asia/Shanghai date +%Y%m%d%H)
+          echo "nightly_version=${BASE}-${STAMP}" >> "$GITHUB_OUTPUT"
+
+  # -------------------------- WINDOWS (portable exe) -------------------------
+  windows-x64:
+    needs: [sync-dist, compute-version]
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
         with:
-          version: 11.1.1
+          ref: dist
+          persist-credentials: false
+      - name: initialize git submodules
+        run: git submodule update --init --recursive
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: copy pdfjs-dist and simplecc-dist to public directory
+        run: pnpm --filter @readest/readest-app setup-vendors
       - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/readest-app/src-tauri
-      - name: Init submodules and install dependencies
+          key: dist-windows-cargo
+      - name: build portable exe
+        shell: bash
+        timeout-minutes: 60
+        env:
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
         run: |
-          git submodule update --init --depth 1
-          pnpm install --frozen-lockfile
-      - name: Build portable exe
-        working-directory: apps/readest-app
-        run: pnpm tauri build --no-bundle
+          set -euo pipefail
+          cd apps/readest-app
+          echo "NEXT_PUBLIC_PORTABLE_APP=true" >> .env.local
+          node -e "const f='package.json';const j=require('./'+f);j.version='${NIGHTLY_VERSION}';require('fs').writeFileSync(f, JSON.stringify(j,null,2)+'\n')"
+          pnpm tauri build --no-bundle
+          cd ../..
+          cp target/release/readest.exe "Readest_${NIGHTLY_VERSION}_x64-portable.exe"
       - name: Upload to the rolling nightly release
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
+          NOTES: ${{ needs.sync-dist.outputs.notes }}
         run: |
+          printf '%s' "$NOTES" > notes.md
+          [ -s notes.md ] || echo "No new upstream commits in this build." > notes.md
           gh release view nightly --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
             gh release create nightly --repo "$GITHUB_REPOSITORY" \
-              --title "Readest dist — nightly" \
-              --notes "Automated personal build of the dist branch, based on Readest (AGPL-3.0). Source: this repository." \
-              --latest
-          gh release upload nightly target/release/readest.exe --clobber --repo "$GITHUB_REPOSITORY"
+              --title "Readest dist - nightly" \
+              --notes-file notes.md --latest
+          .github/scripts/retry.sh gh release upload nightly "Readest_${NIGHTLY_VERSION}_x64-portable.exe" --clobber --repo "$GITHUB_REPOSITORY"
 
+  # ---------------------------- ANDROID (arm64 apk) --------------------------
   android-arm64:
-    needs: sync-dist
+    needs: [sync-dist, compute-version]
     runs-on: ubuntu-latest
+    timeout-minutes: 110
     steps:
       - uses: actions/checkout@v4
         with:
           ref: dist
+          persist-credentials: false
+      - name: initialize git submodules
+        run: git submodule update --init --recursive
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11.1.1
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
-      - uses: actions/setup-java@v4
+      - name: setup Java
+        uses: actions/setup-java@v4
         with:
-          distribution: temurin
-          java-version: 21
+          distribution: 'zulu'
+          java-version: '17'
+      - name: setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools'
+      - name: install NDK
+        run: sdkmanager "ndk;28.2.13676358"
+      - name: install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+      - name: copy pdfjs-dist and simplecc-dist to public directory
+        run: pnpm --filter @readest/readest-app setup-vendors
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: apps/readest-app/src-tauri
-      - name: Init submodules and install dependencies
-        run: |
-          git submodule update --init --depth 1
-          pnpm install --frozen-lockfile
-      - name: Init android project (fresh, like upstream nightly)
-        working-directory: apps/readest-app
-        run: |
-          rm -rf src-tauri/gen/android
-          pnpm tauri android init
-          git checkout . || true
-      - name: Write keystore.properties from secrets
-        working-directory: apps/readest-app/src-tauri/gen/android
+          key: dist-android-cargo
+      # Mirrors upstream nightly.yml's android leg: fresh gen/android, icons
+      # regenerated, version patched AFTER the `git checkout .` revert.
+      - name: build and sign Android apk
+        shell: bash
+        timeout-minutes: 90
         env:
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
+          NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/28.2.13676358
           ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "keyAlias=$ANDROID_KEY_ALIAS" > keystore.properties
-          echo "password=$ANDROID_KEY_PASSWORD" >> keystore.properties
+          set -euo pipefail
+          cd apps/readest-app/
+          rm -rf src-tauri/gen/android
+          pnpm tauri android init
+          pnpm tauri icon ../../data/icons/readest-book.png
+          git checkout .
+          node -e "const f='package.json';const j=require('./'+f);j.version='${NIGHTLY_VERSION}';require('fs').writeFileSync(f, JSON.stringify(j,null,2)+'\n')"
+          pushd src-tauri/gen/android
+          echo "keyAlias=${ANDROID_KEY_ALIAS}" > keystore.properties
+          echo "password=${ANDROID_KEY_PASSWORD}" >> keystore.properties
+          base64 -d <<< "${ANDROID_KEY_BASE64}" > "$RUNNER_TEMP/keystore.jks"
           echo "storeFile=$RUNNER_TEMP/keystore.jks" >> keystore.properties
-          base64 -d <<< "$ANDROID_KEY_BASE64" > "$RUNNER_TEMP/keystore.jks"
-      - name: Build arm64 APK
-        working-directory: apps/readest-app
-        run: |
-          export NDK_HOME="$ANDROID_NDK_LATEST_HOME"
-          pnpm tauri android build --target aarch64
+          popd
+          pnpm tauri android build -t aarch64
+          cp src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk "Readest_${NIGHTLY_VERSION}_arm64.apk"
       - name: Upload to the rolling nightly release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
         run: |
-          gh release upload nightly \
-            apps/readest-app/src-tauri/gen/android/app/build/outputs/apk/arm64/release/app-arm64-release.apk \
-            --clobber --repo "$GITHUB_REPOSITORY"
+          gh release view nightly --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || \
+            gh release create nightly --repo "$GITHUB_REPOSITORY" \
+              --title "Readest dist - nightly" --latest
+          .github/scripts/retry.sh gh release upload nightly "apps/readest-app/Readest_${NIGHTLY_VERSION}_arm64.apk" --clobber --repo "$GITHUB_REPOSITORY"
