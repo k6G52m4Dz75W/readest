@@ -112,6 +112,14 @@ jobs:
           pnpm tauri build --no-bundle
           cd ../..
           cp target/release/readest.exe "Readest_${NIGHTLY_VERSION}_x64-portable.exe"
+      - name: sign portable exe for the updater
+        shell: bash
+        working-directory: apps/readest-app
+        env:
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm tauri signer sign "../../Readest_${NIGHTLY_VERSION}_x64-portable.exe"
       - name: Upload to the rolling nightly release
         shell: bash
         env:
@@ -126,6 +134,12 @@ jobs:
               --title "Readest dist - nightly" \
               --notes-file notes.md --latest
           .github/scripts/retry.sh gh release upload nightly "Readest_${NIGHTLY_VERSION}_x64-portable.exe" --clobber --repo "$GITHUB_REPOSITORY"
+          # Manifest fragment for the assemble-manifest job.
+          SIG=$(cat "Readest_${NIGHTLY_VERSION}_x64-portable.exe.sig")
+          ASSET_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/nightly/Readest_${NIGHTLY_VERSION}_x64-portable.exe"
+          jq -n --arg url "$ASSET_URL" --arg sig "$SIG" \
+            '{platforms: {"windows-x86_64-portable": {url: $url, signature: $sig}}}' > latest-windows.json
+          gh release upload nightly latest-windows.json --clobber --repo "$GITHUB_REPOSITORY"
           # Prune: keep only the 7 newest x64 portable builds on the release.
           for id in $(gh api "repos/$GITHUB_REPOSITORY/releases/tags/nightly" \
               --jq '[.assets[] | select(.name | endswith("_x64-portable.exe"))] | sort_by(.updated_at) | reverse | .[7:] | .[].id'); do
@@ -198,6 +212,14 @@ jobs:
           popd
           pnpm tauri android build -t aarch64
           cp src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release.apk "Readest_${NIGHTLY_VERSION}_arm64.apk"
+      - name: sign apk for the updater
+        shell: bash
+        working-directory: apps/readest-app
+        env:
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: pnpm tauri signer sign "Readest_${NIGHTLY_VERSION}_arm64.apk"
       - name: Upload to the rolling nightly release
         shell: bash
         env:
@@ -208,8 +230,48 @@ jobs:
             gh release create nightly --repo "$GITHUB_REPOSITORY" \
               --title "Readest dist - nightly" --latest
           .github/scripts/retry.sh gh release upload nightly "apps/readest-app/Readest_${NIGHTLY_VERSION}_arm64.apk" --clobber --repo "$GITHUB_REPOSITORY"
+          # Manifest fragment for the assemble-manifest job.
+          SIG=$(cat "apps/readest-app/Readest_${NIGHTLY_VERSION}_arm64.apk.sig")
+          ASSET_URL="https://github.com/$GITHUB_REPOSITORY/releases/download/nightly/Readest_${NIGHTLY_VERSION}_arm64.apk"
+          jq -n --arg url "$ASSET_URL" --arg sig "$SIG" \
+            '{platforms: {"android-arm64": {url: $url, signature: $sig}}}' > latest-android.json
+          gh release upload nightly latest-android.json --clobber --repo "$GITHUB_REPOSITORY"
           # Prune: keep only the 7 newest arm64 builds on the release.
           for id in $(gh api "repos/$GITHUB_REPOSITORY/releases/tags/nightly" \
               --jq '[.assets[] | select(.name | endswith("_arm64.apk"))] | sort_by(.updated_at) | reverse | .[7:] | .[].id'); do
             gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$id" && echo "pruned asset $id"
           done
+
+  # Merge the per-leg manifest fragments into latest.json + release-notes.json
+  # and promote them as release assets, so the in-app updater and changelog box
+  # serve this fork's own build instead of upstream's endpoints.
+  assemble-manifest:
+    needs: [sync-dist, compute-version, windows-x64, android-arm64]
+    if: ${{ always() && needs.compute-version.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: assemble and promote latest.json + release-notes.json
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NIGHTLY_VERSION: ${{ needs.compute-version.outputs.nightly_version }}
+          NOTES: ${{ needs.sync-dist.outputs.notes }}
+        run: |
+          set -euo pipefail
+          mkdir -p frag
+          gh release download nightly --repo "$GITHUB_REPOSITORY" -p 'latest-*.json' -D frag --clobber
+          [ -n "$(ls -A frag 2>/dev/null)" ] || { echo "::error::no manifest fragments found — both build legs failed"; exit 1; }
+          NOTES_TEXT=$(printf '%s' "$NOTES" | sed 's/^- //')
+          [ -n "$NOTES_TEXT" ] || NOTES_TEXT="No new upstream commits in this build."
+          jq -s --arg version "$NIGHTLY_VERSION" --arg notes "$NOTES_TEXT" \
+            '{version: $version, pub_date: (now | todateiso8601), notes: $notes, platforms: (map(.platforms) | add)}' \
+            frag/*.json > latest.json
+          STAMP="${NIGHTLY_VERSION##*-}"
+          BUILD_DATE="${STAMP:0:4}-${STAMP:4:2}-${STAMP:6:2}"
+          NOTES_ARRAY=$(printf '%s\n' "$NOTES_TEXT" | jq -R . | jq -s 'map(select(length > 0))')
+          jq -n --arg version "$NIGHTLY_VERSION" --arg date "$BUILD_DATE" --argjson notes "$NOTES_ARRAY" \
+            '{releases: {($version): {date: $date, notes: $notes}}}' > release-notes.json
+          echo "Assembled latest.json platforms:"
+          jq -r '.platforms | keys[]' latest.json
+          gh release upload nightly latest.json release-notes.json --clobber --repo "$GITHUB_REPOSITORY"

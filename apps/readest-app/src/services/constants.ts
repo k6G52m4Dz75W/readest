@@ -233,7 +233,9 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   openBookInNewWindow: true,
   alwaysShowStatusBar: false,
   autoCheckUpdates: true,
-  updateChannel: 'stable',
+  // Fork build: this repo only publishes rolling nightlies, so the nightly
+  // channel is the default (and only meaningful) update channel here.
+  updateChannel: 'nightly',
   screenWakeLock: false,
   autohideCursor: true,
   screenBrightness: -1, // -1~100, -1 for system default
@@ -1013,19 +1015,25 @@ export const SHARE_TOKEN_LENGTH = 22;
 export const SHARE_PRESIGN_TTL_SECONDS = 300;
 export const SHARE_CFI_MAX_LENGTH = 512;
 
-const LATEST_DOWNLOAD_BASE_URL = 'https://download.readest.com/releases';
+// Fork build: the update channel is this fork's own rolling `nightly` GitHub
+// release. nightly-dist.yml collects the upstream commit list between builds,
+// signs both artifacts with the fork's own minisign key, and assembles
+// latest.json + release-notes.json as release assets.
+export const READEST_UPDATER_FILE =
+  'https://github.com/k6G52m4Dz75W/readest/releases/download/nightly/latest.json';
 
-export const READEST_UPDATER_FILE = `${LATEST_DOWNLOAD_BASE_URL}/latest.json`;
+export const READEST_CHANGELOG_FILE =
+  'https://github.com/k6G52m4Dz75W/readest/releases/download/nightly/release-notes.json';
 
-export const READEST_CHANGELOG_FILE = `${LATEST_DOWNLOAD_BASE_URL}/release-notes.json`;
-
-export const READEST_NIGHTLY_UPDATER_FILE = 'https://download.readest.com/nightly/latest.json';
+export const READEST_NIGHTLY_UPDATER_FILE =
+  'https://github.com/k6G52m4Dz75W/readest/releases/download/nightly/latest.json';
 
 // Public (verification) key, identical to src-tauri/tauri.conf.json `updater.pubkey`.
 // Used to verify nightly artifacts in the custom install flows (portable /
-// AppImage / Android). Safe to embed — it is a public key.
+// AppImage / Android). Safe to embed — it is a public key. This is the FORK's
+// own key (private half lives in the repo secret TAURI_SIGNING_PRIVATE_KEY).
 export const READEST_UPDATER_PUBKEY =
-  'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEJFMEQ1QjE2OEU1NEIzNTEKUldSUnMxU09GbHNOdmpEaWFMT1crRFpEV2VORzQ2MklxaFc0M1R0ci9xY2c1bENXS0xhM1R1L2sK';
+  'dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDU4NERBNzNCQzU0NUFFMDkKUldRSnJrWEZPNmROV05oL3lmK282amp1dzRoSDdtRUpsTkExS0V2NFRUOU1hK0RXRUl4bzZSK2sK';
 
 export const READEST_PUBLIC_STORAGE_BASE_URL = 'https://storage.readest.com';
 // Custom domain serving the readest-public bucket; durable media assets
