@@ -237,7 +237,9 @@ const FoliateViewer: React.FC<{
   const [scrollMargins, setScrollMargins] = useState({ top: 0, bottom: 0 });
   const docLoaded = useRef(false);
 
-  const autoScroll = useAutoScroll(bookKey, viewRef);
+  // Commits the relocation an Auto Scroll wipe held back (see commitRelocate).
+  const wipeCommitRef = useRef<(() => void) | null>(null);
+  const autoScroll = useAutoScroll(bookKey, viewRef, wipeCommitRef);
   const { registerSpeedListeners, overlayVisible: speedOverlayVisible } =
     useAutoScrollSpeedGesture(autoScroll);
 
@@ -294,6 +296,8 @@ const FoliateViewer: React.FC<{
   // by the browser's normal vsync loop, and doesn't accumulate when
   // the page is busy — which is the behaviour we want here.
   const pendingRelocateRef = useRef<CustomEvent | null>(null);
+  // A linked book's move an Auto Scroll wipe held back (see docRelocateHandler).
+  const heldParallelRelocateRef = useRef<{ index: number; fraction: number } | null>(null);
   const relocateRafRef = useRef<number | null>(null);
   const relocateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSampledSpineRef = useRef<number | null>(null);
@@ -308,8 +312,13 @@ const FoliateViewer: React.FC<{
     relocateRafRef.current = null;
     cancelAnimationFrame(id);
   }, []);
+  const { isWipeAhead } = autoScroll;
   const commitRelocate = useCallback(() => {
     cancelRelocateScheduled();
+    // An Auto Scroll wipe turns to the next page while the reader is still on
+    // the page above it (#7575). That page is held back, also on close, until
+    // the wipe brings it in, or is replaced when the wipe turns back.
+    if (isWipeAhead()) return;
     const event = pendingRelocateRef.current;
     pendingRelocateRef.current = null;
     if (!event) return;
@@ -395,7 +404,7 @@ const FoliateViewer: React.FC<{
       // mid-chapter, where they would break the one-page-per-turn cadence.
       snapshotChapterScreens(bookKey);
     }
-  }, [bookKey, setProgress, cancelRelocateScheduled]);
+  }, [bookKey, setProgress, cancelRelocateScheduled, isWipeAhead]);
 
   const progressRelocateHandler = (event: Event) => {
     // Foliate can emit a late relocation after close() clears its progress
@@ -437,6 +446,9 @@ const FoliateViewer: React.FC<{
       }
       cancelRelocateScheduled();
       pendingRelocateRef.current = null;
+      // A wipe ending after close must not move linked books to the page it
+      // held back, which was never reached.
+      heldParallelRelocateRef.current = null;
       // The sampled screen counts describe one open's layout; a reopen starts
       // a fresh map so settings or viewport changes can never leak stale
       // weights across sessions.
@@ -795,6 +807,7 @@ const FoliateViewer: React.FC<{
       appLang: getLocale(),
       allowDownload,
       vocabulary: useVocabularyStore.getState().getLearningAndMastered(vocabularyLang(bookLang)),
+      onGlossesChanged: () => eventDispatcher.dispatch('wordlens-glosses-changed', { bookKey }),
       onProgress: () => {
         if (wordLensToastShownRef.current) return;
         wordLensToastShownRef.current = true;
@@ -855,6 +868,17 @@ const FoliateViewer: React.FC<{
     // can flow normally.
     setPreviewMode(bookKey, false);
 
+    // Linked books follow an Auto Scroll wipe's turn once the page is wiped
+    // in, like the reading position (#7575).
+    if (isWipeAhead()) {
+      heldParallelRelocateRef.current = detail;
+      return;
+    }
+    heldParallelRelocateRef.current = null;
+    syncParallelViews(detail);
+  };
+
+  const syncParallelViews = (detail: { index: number; fraction: number }) => {
     const parallelViews = getParallels(bookKey);
     if (parallelViews && parallelViews.size > 0) {
       parallelViews.forEach((key) => {
@@ -866,6 +890,14 @@ const FoliateViewer: React.FC<{
         }
       });
     }
+  };
+
+  // The page an Auto Scroll wipe brought in is the reading position now.
+  wipeCommitRef.current = () => {
+    commitRelocate();
+    const held = heldParallelRelocateRef.current;
+    heldParallelRelocateRef.current = null;
+    if (held) syncParallelViews(held);
   };
 
   const { handlePageFlip } = usePagination(bookKey, viewRef, containerRef);
@@ -1613,6 +1645,28 @@ const FoliateViewer: React.FC<{
         {...touchHandlers}
       />
       {autoscrollAnchor && <AutoscrollIndicator anchor={autoscrollAnchor} />}
+      {autoScroll.active && autoScroll.wipe && (
+        // The edge of a page wipe, moved by useAutoScroll every frame: the next
+        // page is pulled down over the page being read like a blind, and its
+        // edge casts a short shadow onto it, with a lit rim on dark themes.
+        // E-ink gets a plain 1px line (the global rule drops `shadow-`). The
+        // full-cell layer keeps the edge above the page snapshot.
+        <div
+          aria-hidden
+          data-page-wipe-above=''
+          className='pointer-events-none absolute inset-0 z-10 overflow-hidden'
+        >
+          <div
+            ref={autoScroll.wipeLineRef}
+            className={clsx(
+              'absolute left-0 top-0 h-2',
+              'not-eink:bg-linear-to-b theme-dark:from-black/55 from-black/30 to-transparent',
+              'theme-dark:shadow-[inset_0_1px_0_rgb(255_255_255/0.4)]',
+              'eink:border-base-content eink:border-t',
+            )}
+          />
+        </div>
+      )}
       {autoScroll.active && (
         <AutoScrollControl
           bookKey={bookKey}
