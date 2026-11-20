@@ -194,9 +194,20 @@ export const isSelfHosted = (): boolean =>
 /**
  * The single gate for premium features: a self-hosted deployment, a paid
  * subscription, or the Full Customization unlock bought outright.
+ *
+ * LOCAL FORK PATCH: every client-side plan gate (third-party cloud sync, TTS
+ * cache, ABS offline, Anki, nearby pairing, the Send-to-Kindle inbox UI and
+ * signed-in custom translators) drains through this single predicate, so
+ * unlocking it here ungates the whole funnel, including any gate upstream
+ * later hangs off it. BYO/device-side surfaces only — Readest Voice, storage
+ * quota and the DeepL relay quota still validate the real plan server-side,
+ * and the Send inbox's server endpoints keep their 403 (accepted trade-off).
+ * (AGPL-3.0 §2/§3 local modification.)
  */
-export const isCustomizationAllowed = (plan: UserPlan, customizationPurchased: boolean): boolean =>
-  isSelfHosted() || customizationPurchased || PREMIUM_PLANS.includes(plan);
+export const isCustomizationAllowed = (
+  _plan: UserPlan,
+  _customizationPurchased: boolean,
+): boolean => true;
 
 /**
  * Custom translators (the user's own OpenAI-compatible LLM or DeepL key) are a
