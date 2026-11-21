@@ -13,14 +13,17 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Merge upstream/main into dist every night, keeping the fork's own .github
-  # (GITHUB_TOKEN cannot push workflow-file changes - hard platform rule).
-  # .github updates flow via the user's periodic local sync instead.
+  # Merge upstream/main into dist every night. Only .github/workflows is
+  # frozen (GITHUB_TOKEN cannot push workflow files - hard platform rule);
+  # the rest of .github (templates, scripts) flows in automatically so
+  # upstream updates are followed. Each freeze files a comment on a
+  # persistent issue that @-mentions the owner (email notification).
   # Collect the upstream commit list since the last build for the release notes.
   sync-dist:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      issues: write
     outputs:
       notes: ${{ steps.notes.outputs.notes }}
     steps:
@@ -28,7 +31,8 @@ jobs:
         with:
           ref: dist
           fetch-depth: 0
-      - name: Merge upstream/main into dist (keep fork .github) and push
+      - name: Merge upstream/main into dist (freeze workflows, absorb rest) and push
+        id: merge
         run: |
           git config user.name "nightly-dist-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -39,10 +43,51 @@ jobs:
             echo "dist already contains upstream/main"
           else
             git merge upstream/main --no-edit || { echo "::error::merge conflict - resolve by hand"; exit 1; }
-            git restore --source="$BEFORE" --staged --worktree -- .github || true
-            git clean -fd -- .github >/dev/null 2>&1 || true
-            git commit -am "dist: keep fork .github over upstream's" 2>/dev/null || true
+            # Surgical freeze: reset .github/workflows to the pre-merge state
+            # (modifications reverted, upstream additions dropped, upstream
+            # deletions restored). The amend folds the revert into the merge
+            # commit so HEAD's first parent stays the pre-merge tip and the
+            # notes range below keeps covering the upstream commits.
+            git rm -rq --ignore-unmatch --cached .github/workflows || true
+            git checkout "$BEFORE" -- .github/workflows
+            git clean -fdq -- .github/workflows || true
+            if git diff --cached --quiet -- .github/workflows; then
+              echo "no upstream workflow changes to freeze"
+            else
+              {
+                echo "frozen<<EOF"
+                git diff --stat "$BEFORE" upstream/main -- .github/workflows
+                echo "EOF"
+              } >> "$GITHUB_OUTPUT"
+              git commit --amend --no-edit
+            fi
             git push origin dist
+          fi
+      - name: Notify on workflow freeze (mention owner)
+        if: ${{ steps.merge.outputs.frozen != '' }}
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FROZEN: ${{ steps.merge.outputs.frozen }}
+        run: |
+          BODY=$(printf '%s\n' \
+            "Upstream touched \`.github/workflows\`; the nightly build auto-froze it (GITHUB_TOKEN cannot push workflow files)." \
+            "Non-workflow \`.github\` updates were absorbed automatically. Absorb workflow updates locally if desired:" \
+            "" \
+            "\`git checkout upstream/main -- .github/workflows && git checkout origin/dist -- .github/workflows/nightly-dist.yml\`" \
+            "" \
+            "Frozen diff:" \
+            '```' \
+            "$FROZEN" \
+            '```' \
+            "@k6G52m4Dz75W")
+          ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
+            --search "upstream workflow freeze log in:title" --json number --jq '.[0].number')
+          if [ -n "$ISSUE" ]; then
+            gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "$BODY"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "Upstream workflow freeze log" --body "$BODY"
           fi
       - name: Collect upstream commits since last build
         id: notes
