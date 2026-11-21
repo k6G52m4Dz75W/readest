@@ -610,6 +610,7 @@
   "Save Book Cover": "පොත් ආවරණය සුරකින්න",
   "Auto-save last book cover": "අවසන් පොත් ආවරණය ස්වයංක්‍රීයව සුරකින්න",
   "Back": "ආපසු",
+  "Back / Close": "ආපසු / වසන්න",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "තහවුරු කිරීමේ විද්‍යුත් තැපැල් පණිවිඩය යවන්නා! වෙනස්කම තහවුරු කිරීම සඳහා ඔබගේ පැරණි සහ නව විද්‍යුත් තැපැල් ලිපින පරීක්ෂා කරන්න.",
   "Failed to update email": "විද්‍යුත් තැපැල් යාවත්කාලීන කිරීමට අසමත් විය",
   "New Email": "නව විද්‍යුත් තැපැල්",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "සංඛ්‍යාලේඛන ඒකාබද්ධ කරන්න",
   "Merge statistics of {{title}}": "{{title}} හි සංඛ්‍යාලේඛන ඒකාබද්ධ කරන්න",
   "No other books have reading statistics": "වෙනත් කිසිදු පොතකට කියවීමේ සංඛ්‍යාලේඛන නැත",
-  "Merge another entry into this book:": "මෙම පොතට වෙනත් ඇතුළත් කිරීමක් ඒකාබද්ධ කරන්න:"
+  "Merge another entry into this book:": "මෙම පොතට වෙනත් ඇතුළත් කිරීමක් ඒකාබද්ධ කරන්න:",
+  "Remove {{voice}} from favorites": "{{voice}} ප්‍රියතමයෙන් ඉවත් කරන්න",
+  "Add {{voice}} to favorites": "{{voice}} ප්‍රියතමයට එකතු කරන්න",
+  "Remove from favorites": "ප්‍රියතමයෙන් ඉවත් කරන්න",
+  "Add to favorites": "ප්‍රියතමයට එකතු කරන්න",
+  "Favorites": "ප්‍රියතම",
+  "Last Looked Up": "අවසන් වරට සෙවූ",
+  "Most Saved Sentences": "වැඩිම සුරැකි වාක්‍ය",
+  "Newest Added": "අලුතින්ම එක් කළ",
+  "Oldest Added": "පැරණිම එක් කළ",
+  "Alphabetical A-Z": "අකාරාදී A-Z",
+  "Alphabetical Z-A": "අකාරාදී Z-A",
+  "All Languages": "සියලු භාෂා"
 }

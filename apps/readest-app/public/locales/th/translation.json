@@ -606,6 +606,7 @@
   "Save Book Cover": "บันทึกปกหนังสือ",
   "Auto-save last book cover": "บันทึกปกหนังสือสุดท้ายโดยอัตโนมัติ",
   "Back": "กลับ",
+  "Back / Close": "กลับ / ปิด",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "ส่งอีเมลยืนยันแล้ว! กรุณาตรวจสอบอีเมลเก่าและใหม่ของคุณเพื่อยืนยันการเปลี่ยนแปลง",
   "Failed to update email": "ไม่สามารถอัปเดตอีเมลได้",
   "New Email": "อีเมลใหม่",
@@ -2795,5 +2796,17 @@
   "Merge Statistics": "รวมสถิติ",
   "Merge statistics of {{title}}": "รวมสถิติของ {{title}}",
   "No other books have reading statistics": "ไม่มีหนังสือเล่มอื่นที่มีสถิติการอ่าน",
-  "Merge another entry into this book:": "รวมรายการอื่นเข้ากับหนังสือเล่มนี้:"
+  "Merge another entry into this book:": "รวมรายการอื่นเข้ากับหนังสือเล่มนี้:",
+  "Remove {{voice}} from favorites": "นำ {{voice}} ออกจากรายการโปรด",
+  "Add {{voice}} to favorites": "เพิ่ม {{voice}} ในรายการโปรด",
+  "Remove from favorites": "นำออกจากรายการโปรด",
+  "Add to favorites": "เพิ่มในรายการโปรด",
+  "Favorites": "รายการโปรด",
+  "Last Looked Up": "ค้นหาล่าสุด",
+  "Most Saved Sentences": "ประโยคที่บันทึกมากที่สุด",
+  "Newest Added": "เพิ่มล่าสุด",
+  "Oldest Added": "เพิ่มเก่าสุด",
+  "Alphabetical A-Z": "ตามตัวอักษร A-Z",
+  "Alphabetical Z-A": "ตามตัวอักษร Z-A",
+  "All Languages": "ทุกภาษา"
 }

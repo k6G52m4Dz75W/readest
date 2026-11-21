@@ -33,6 +33,7 @@
   "Updating password ...": "Jelszó frissítése ...",
   "Your password has been updated": "Jelszava frissítve lett",
   "Back": "Vissza",
+  "Back / Close": "Vissza / Bezárás",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Megerősítő e-mail elküldve! Kérjük, ellenőrizze régi és új e-mail címét a módosítás megerősítéséhez.",
   "Failed to update email": "Az e-mail frissítése nem sikerült",
   "New Email": "Új e-mail",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "Statisztika egyesítése",
   "Merge statistics of {{title}}": "Statisztika egyesítése: {{title}}",
   "No other books have reading statistics": "Más könyvnek nincs olvasási statisztikája",
-  "Merge another entry into this book:": "Másik bejegyzés egyesítése ezzel a könyvvel:"
+  "Merge another entry into this book:": "Másik bejegyzés egyesítése ezzel a könyvvel:",
+  "Remove {{voice}} from favorites": "{{voice}} eltávolítása a kedvencek közül",
+  "Add {{voice}} to favorites": "{{voice}} hozzáadása a kedvencekhez",
+  "Remove from favorites": "Eltávolítás a kedvencek közül",
+  "Add to favorites": "Hozzáadás a kedvencekhez",
+  "Favorites": "Kedvencek",
+  "Last Looked Up": "Utoljára keresett",
+  "Most Saved Sentences": "Legtöbb mentett mondat",
+  "Newest Added": "Legújabban hozzáadott",
+  "Oldest Added": "Legrégebben hozzáadott",
+  "Alphabetical A-Z": "Betűrendben A–Z",
+  "Alphabetical Z-A": "Betűrendben Z–A",
+  "All Languages": "Minden nyelv"
 }

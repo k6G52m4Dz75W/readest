@@ -610,6 +610,7 @@
   "Save Book Cover": "Spara bokomslag",
   "Auto-save last book cover": "Automatiskt spara senaste bokomslag",
   "Back": "Tillbaka",
+  "Back / Close": "Tillbaka / Stäng",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Bekräftelsemail skickat! Kontrollera din gamla och nya e-postadress för att bekräfta ändringen.",
   "Failed to update email": "Misslyckades med att uppdatera e-post",
   "New Email": "Ny e-post",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "Slå ihop statistik",
   "Merge statistics of {{title}}": "Slå ihop statistik för {{title}}",
   "No other books have reading statistics": "Inga andra böcker har lässtatistik",
-  "Merge another entry into this book:": "Slå ihop en annan post med den här boken:"
+  "Merge another entry into this book:": "Slå ihop en annan post med den här boken:",
+  "Remove {{voice}} from favorites": "Ta bort {{voice}} från favoriter",
+  "Add {{voice}} to favorites": "Lägg till {{voice}} i favoriter",
+  "Remove from favorites": "Ta bort från favoriter",
+  "Add to favorites": "Lägg till i favoriter",
+  "Favorites": "Favoriter",
+  "Last Looked Up": "Senast uppslagna",
+  "Most Saved Sentences": "Flest sparade meningar",
+  "Newest Added": "Senast tillagda",
+  "Oldest Added": "Först tillagda",
+  "Alphabetical A-Z": "Alfabetisk A–Ö",
+  "Alphabetical Z-A": "Alfabetisk Ö–A",
+  "All Languages": "Alla språk"
 }

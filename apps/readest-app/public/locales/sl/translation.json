@@ -33,6 +33,7 @@
   "Updating password ...": "Posodabljanje gesla ...",
   "Your password has been updated": "Vaše geslo je bilo posodobljeno",
   "Back": "Nazaj",
+  "Back / Close": "Nazaj / Zapri",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Potrditvena e-pošta poslana! Prosimo, preverite svoj stari in novi e-poštni naslov za potrditev spremembe.",
   "Failed to update email": "Posodobitev e-pošte ni uspela",
   "New Email": "Nova e-pošta",
@@ -3014,5 +3015,17 @@
   "Merge Statistics": "Združi statistiko",
   "Merge statistics of {{title}}": "Združi statistiko: {{title}}",
   "No other books have reading statistics": "Nobena druga knjiga nima statistike branja",
-  "Merge another entry into this book:": "V to knjigo združi drug vnos:"
+  "Merge another entry into this book:": "V to knjigo združi drug vnos:",
+  "Remove {{voice}} from favorites": "Odstrani {{voice}} iz priljubljenih",
+  "Add {{voice}} to favorites": "Dodaj {{voice}} med priljubljene",
+  "Remove from favorites": "Odstrani iz priljubljenih",
+  "Add to favorites": "Dodaj med priljubljene",
+  "Favorites": "Priljubljeni",
+  "Last Looked Up": "Nazadnje poiskano",
+  "Most Saved Sentences": "Največ shranjenih stavkov",
+  "Newest Added": "Najnovejše dodane",
+  "Oldest Added": "Najstarejše dodane",
+  "Alphabetical A-Z": "Abecedno A–Ž",
+  "Alphabetical Z-A": "Abecedno Ž–A",
+  "All Languages": "Vsi jeziki"
 }

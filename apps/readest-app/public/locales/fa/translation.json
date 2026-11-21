@@ -610,6 +610,7 @@
   "Save Book Cover": "ذخیره جلد کتاب",
   "Auto-save last book cover": "ذخیره خودکار آخرین جلد کتاب",
   "Back": "بازگشت",
+  "Back / Close": "بازگشت / بستن",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "ایمیل تأیید ارسال شد! لطفاً ایمیل قدیمی و جدید خود را بررسی کنید تا تغییر را تأیید نمایید.",
   "Failed to update email": "به‌روزرسانی ایمیل ناموفق بود",
   "New Email": "ایمیل جدید",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "ادغام آمار",
   "Merge statistics of {{title}}": "ادغام آمار {{title}}",
   "No other books have reading statistics": "کتاب دیگری آمار مطالعه ندارد",
-  "Merge another entry into this book:": "ادغام مورد دیگری در این کتاب:"
+  "Merge another entry into this book:": "ادغام مورد دیگری در این کتاب:",
+  "Remove {{voice}} from favorites": "حذف {{voice}} از علاقه‌مندی‌ها",
+  "Add {{voice}} to favorites": "افزودن {{voice}} به علاقه‌مندی‌ها",
+  "Remove from favorites": "حذف از علاقه‌مندی‌ها",
+  "Add to favorites": "افزودن به علاقه‌مندی‌ها",
+  "Favorites": "علاقه‌مندی‌ها",
+  "Last Looked Up": "آخرین جستجو",
+  "Most Saved Sentences": "بیشترین جمله ذخیره‌شده",
+  "Newest Added": "جدیدترین افزوده‌ها",
+  "Oldest Added": "قدیمی‌ترین افزوده‌ها",
+  "Alphabetical A-Z": "الفبایی A تا Z",
+  "Alphabetical Z-A": "الفبایی Z تا A",
+  "All Languages": "همه زبان‌ها"
 }

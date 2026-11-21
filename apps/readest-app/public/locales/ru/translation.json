@@ -618,6 +618,7 @@
   "Save Book Cover": "Сохранить обложку книги",
   "Auto-save last book cover": "Автоматически сохранять последнюю обложку книги",
   "Back": "Назад",
+  "Back / Close": "Назад / Закрыть",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Письмо с подтверждением отправлено! Пожалуйста, проверьте старый и новый адреса электронной почты, чтобы подтвердить изменение.",
   "Failed to update email": "Не удалось обновить электронную почту",
   "New Email": "Новый адрес электронной почты",
@@ -3014,5 +3015,17 @@
   "Merge Statistics": "Объединить статистику",
   "Merge statistics of {{title}}": "Объединить статистику: {{title}}",
   "No other books have reading statistics": "У других книг нет статистики чтения",
-  "Merge another entry into this book:": "Объединить другую запись с этой книгой:"
+  "Merge another entry into this book:": "Объединить другую запись с этой книгой:",
+  "Remove {{voice}} from favorites": "Удалить {{voice}} из избранного",
+  "Add {{voice}} to favorites": "Добавить {{voice}} в избранное",
+  "Remove from favorites": "Удалить из избранного",
+  "Add to favorites": "Добавить в избранное",
+  "Favorites": "Избранное",
+  "Last Looked Up": "Последний поиск",
+  "Most Saved Sentences": "Больше всего сохранённых предложений",
+  "Newest Added": "Недавно добавленные",
+  "Oldest Added": "Давно добавленные",
+  "Alphabetical A-Z": "По алфавиту А-Я",
+  "Alphabetical Z-A": "По алфавиту Я-А",
+  "All Languages": "Все языки"
 }

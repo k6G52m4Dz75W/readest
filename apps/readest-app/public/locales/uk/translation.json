@@ -618,6 +618,7 @@
   "Save Book Cover": "Зберегти обкладинку книги",
   "Auto-save last book cover": "Автоматично зберегти останню обкладинку книги",
   "Back": "Назад",
+  "Back / Close": "Назад / Закрити",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Лист підтвердження надіслано! Будь ласка, перевірте стару та нову електронну адресу, щоб підтвердити зміну.",
   "Failed to update email": "Не вдалося оновити електронну пошту",
   "New Email": "Нова електронна адреса",
@@ -3014,5 +3015,17 @@
   "Merge Statistics": "Об’єднати статистику",
   "Merge statistics of {{title}}": "Об’єднати статистику: {{title}}",
   "No other books have reading statistics": "Інші книги не мають статистики читання",
-  "Merge another entry into this book:": "Об’єднати інший запис із цією книгою:"
+  "Merge another entry into this book:": "Об’єднати інший запис із цією книгою:",
+  "Remove {{voice}} from favorites": "Видалити {{voice}} з обраного",
+  "Add {{voice}} to favorites": "Додати {{voice}} до обраного",
+  "Remove from favorites": "Видалити з обраного",
+  "Add to favorites": "Додати до обраного",
+  "Favorites": "Обране",
+  "Last Looked Up": "Останній пошук",
+  "Most Saved Sentences": "Найбільше збережених речень",
+  "Newest Added": "Нещодавно додані",
+  "Oldest Added": "Найдавніше додані",
+  "Alphabetical A-Z": "За алфавітом А-Я",
+  "Alphabetical Z-A": "За алфавітом Я-А",
+  "All Languages": "Усі мови"
 }

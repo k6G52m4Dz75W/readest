@@ -610,6 +610,7 @@
   "Save Book Cover": "বইয়ের মলাট সংরক্ষণ করুন",
   "Auto-save last book cover": "শেষ বইয়ের মলাট স্বয়ংক্রিয়ভাবে সংরক্ষণ করুন",
   "Back": "পেছনে",
+  "Back / Close": "পেছনে / বন্ধ করুন",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "নিশ্চিতকরণ ইমেল পাঠানো হয়েছে! পরিবর্তন নিশ্চিত করতে আপনার পুরানো এবং নতুন ইমেল ঠিকানা পরীক্ষা করুন।",
   "Failed to update email": "ইমেল আপডেট করতে ব্যর্থ",
   "New Email": "নতুন ইমেল",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "পরিসংখ্যান একত্র করুন",
   "Merge statistics of {{title}}": "{{title}}-এর পরিসংখ্যান একত্র করুন",
   "No other books have reading statistics": "অন্য কোনো বইয়ের পড়ার পরিসংখ্যান নেই",
-  "Merge another entry into this book:": "এই বইয়ের সঙ্গে অন্য একটি এন্ট্রি একত্র করুন:"
+  "Merge another entry into this book:": "এই বইয়ের সঙ্গে অন্য একটি এন্ট্রি একত্র করুন:",
+  "Remove {{voice}} from favorites": "{{voice}} প্রিয় থেকে সরান",
+  "Add {{voice}} to favorites": "{{voice}} প্রিয়তে যোগ করুন",
+  "Remove from favorites": "প্রিয় থেকে সরান",
+  "Add to favorites": "প্রিয়তে যোগ করুন",
+  "Favorites": "প্রিয়",
+  "Last Looked Up": "সর্বশেষ খোঁজা",
+  "Most Saved Sentences": "সবচেয়ে বেশি সংরক্ষিত বাক্য",
+  "Newest Added": "সবচেয়ে নতুন যোগ",
+  "Oldest Added": "সবচেয়ে পুরনো যোগ",
+  "Alphabetical A-Z": "বর্ণানুক্রমে A-Z",
+  "Alphabetical Z-A": "বর্ণানুক্রমে Z-A",
+  "All Languages": "সব ভাষা"
 }

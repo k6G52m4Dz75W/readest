@@ -614,6 +614,7 @@
   "Save Book Cover": "Kitap Kapağını Kaydet",
   "Auto-save last book cover": "Son kitap kapağını otomatik olarak kaydet",
   "Back": "Geri",
+  "Back / Close": "Geri / Kapat",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Onay e-postası gönderildi! Değişikliği onaylamak için eski ve yeni e-posta adreslerinizi kontrol edin.",
   "Failed to update email": "E-posta güncellenemedi",
   "New Email": "Yeni e-posta",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "İstatistikleri Birleştir",
   "Merge statistics of {{title}}": "{{title}} istatistiklerini birleştir",
   "No other books have reading statistics": "Başka hiçbir kitabın okuma istatistiği yok",
-  "Merge another entry into this book:": "Bu kitapla birleştirilecek başka bir kayıt:"
+  "Merge another entry into this book:": "Bu kitapla birleştirilecek başka bir kayıt:",
+  "Remove {{voice}} from favorites": "{{voice}} sesini favorilerden kaldır",
+  "Add {{voice}} to favorites": "{{voice}} sesini favorilere ekle",
+  "Remove from favorites": "Favorilerden kaldır",
+  "Add to favorites": "Favorilere ekle",
+  "Favorites": "Favoriler",
+  "Last Looked Up": "Son aranan",
+  "Most Saved Sentences": "En çok kaydedilen cümle",
+  "Newest Added": "En yeni eklenen",
+  "Oldest Added": "En eski eklenen",
+  "Alphabetical A-Z": "Alfabetik A-Z",
+  "Alphabetical Z-A": "Alfabetik Z-A",
+  "All Languages": "Tüm diller"
 }

@@ -606,6 +606,7 @@
   "Save Book Cover": "保存書籍封面",
   "Auto-save last book cover": "自動保存最後一本書的封面",
   "Back": "返回",
+  "Back / Close": "返回 / 關閉",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "確認郵件已發送！請檢查您的舊電子郵件和新電子郵件以確認更改。",
   "Failed to update email": "更新電子郵件失敗",
   "New Email": "新電子郵件",
@@ -2795,5 +2796,17 @@
   "Merge Statistics": "合併統計",
   "Merge statistics of {{title}}": "合併《{{title}}》的統計",
   "No other books have reading statistics": "沒有其他書籍有閱讀統計",
-  "Merge another entry into this book:": "將其他條目合併到這本書："
+  "Merge another entry into this book:": "將其他條目合併到這本書：",
+  "Remove {{voice}} from favorites": "將 {{voice}} 從我的最愛移除",
+  "Add {{voice}} to favorites": "將 {{voice}} 加入我的最愛",
+  "Remove from favorites": "從我的最愛移除",
+  "Add to favorites": "加入我的最愛",
+  "Favorites": "我的最愛",
+  "Last Looked Up": "最近查詢",
+  "Most Saved Sentences": "儲存例句最多",
+  "Newest Added": "最新加入",
+  "Oldest Added": "最早加入",
+  "Alphabetical A-Z": "字母順序 A-Z",
+  "Alphabetical Z-A": "字母順序 Z-A",
+  "All Languages": "所有語言"
 }

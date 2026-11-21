@@ -33,6 +33,7 @@
   "Updating password ...": "Se actualizează parola...",
   "Your password has been updated": "Parola dvs. a fost actualizată",
   "Back": "Înapoi",
+  "Back / Close": "Înapoi / Închide",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "E-mail de confirmare trimis! Vă rugăm să verificați adresele de e-mail vechi și noi pentru a confirma modificarea.",
   "Failed to update email": "E-mailul nu a fost actualizat",
   "New Email": "E-mail nou",
@@ -2941,5 +2942,17 @@
   "Merge Statistics": "Combină statisticile",
   "Merge statistics of {{title}}": "Combină statisticile pentru {{title}}",
   "No other books have reading statistics": "Nicio altă carte nu are statistici de lectură",
-  "Merge another entry into this book:": "Combină o altă intrare cu această carte:"
+  "Merge another entry into this book:": "Combină o altă intrare cu această carte:",
+  "Remove {{voice}} from favorites": "Elimină {{voice}} din favorite",
+  "Add {{voice}} to favorites": "Adaugă {{voice}} la favorite",
+  "Remove from favorites": "Elimină din favorite",
+  "Add to favorites": "Adaugă la favorite",
+  "Favorites": "Favorite",
+  "Last Looked Up": "Ultima căutare",
+  "Most Saved Sentences": "Cele mai multe propoziții salvate",
+  "Newest Added": "Cele mai noi adăugate",
+  "Oldest Added": "Cele mai vechi adăugate",
+  "Alphabetical A-Z": "Alfabetic A-Z",
+  "Alphabetical Z-A": "Alfabetic Z-A",
+  "All Languages": "Toate limbile"
 }

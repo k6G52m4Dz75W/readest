@@ -101,9 +101,7 @@ beforeEach(() => {
   anki.ankiRequestPermission.mockReset().mockResolvedValue(true);
   anki.ankiListDecks.mockReset().mockResolvedValue([{ id: 7, name: 'Readest Vocabulary' }]);
   anki.ankiReadDeck.mockReset().mockResolvedValue({ notes: [], cards: [] });
-  anki.ankiAddNotes
-    .mockReset()
-    .mockImplementation(async (_deck: string, notes: unknown[]) => notes.length);
+  anki.ankiAddNotes.mockReset().mockImplementation(async (notes: unknown[]) => notes.length);
   anki.ankiUpdateTags.mockReset().mockImplementation(async (notes: unknown[]) => notes.length);
 });
 afterEach(() => cleanup());
@@ -235,6 +233,40 @@ describe('VocabularyView', () => {
     expect(scrollIntoView.mock.contexts[0]).toBe(select.parentElement);
   });
 
+  it('offers a language filter only when words span languages', () => {
+    render(<VocabularyView />);
+    expect(screen.queryByRole('combobox', { name: 'Language' })).toBeNull();
+    cleanup();
+    seed([
+      entry('sandworm', {}),
+      entry('haus', { id: 'de:haus', lang: 'de' }),
+      entry('baum', { id: 'de:baum', lang: 'de' }),
+    ]);
+    render(<VocabularyView />);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Language' }), {
+      target: { value: 'de' },
+    });
+    expect(listWords()).toEqual(['haus', 'baum']);
+  });
+
+  it('drops the language filter when its last word is deleted', () => {
+    seed([entry('sandworm', {}), entry('haus', { id: 'de:haus', lang: 'de' })]);
+    render(<VocabularyView />);
+    fireEvent.change(screen.getByRole('combobox', { name: 'Language' }), {
+      target: { value: 'de' },
+    });
+    expect(listWords()).toEqual(['haus']);
+    act(() => useVocabularyStore.getState().remove('de:haus'));
+    expect(screen.queryByRole('combobox', { name: 'Language' })).toBeNull();
+    expect(listWords()).toEqual(['sandworm']);
+    // A German word coming back (a Sync pull) doesn't turn the filter back on.
+    act(() => useVocabularyStore.getState().importWords([{ word: 'baum', lang: 'de' }]));
+    expect((screen.getByRole('combobox', { name: 'Language' }) as HTMLSelectElement).value).toBe(
+      '',
+    );
+    expect(listWords()).toEqual(expect.arrayContaining(['sandworm', 'baum']));
+  });
+
   it('exports only the words the filters show', async () => {
     render(
       <DropdownProvider>
@@ -284,11 +316,10 @@ describe('VocabularyView Anki link', () => {
     renderWithMenu();
     fireEvent.click(await syncButton());
     await waitFor(() => expect(anki.ankiAddNotes).toHaveBeenCalled());
-    const [deck, notes] = anki.ankiAddNotes.mock.calls[0] as [
-      string,
-      { fields: [string, string]; tags: string[] }[],
+    const [notes] = anki.ankiAddNotes.mock.calls[0] as [
+      { deck: string; fields: [string, string]; tags: string[] }[],
     ];
-    expect(deck).toBe('Readest Vocabulary');
+    expect(notes.map((n) => n.deck)).toEqual(['Readest Vocabulary::English']);
     expect(notes.map((n) => n.fields[0].match(/>(\w+)</)?.[1])).toEqual(['spice']);
     expect(notes[0]!.tags).toEqual(
       expect.arrayContaining(['readest::lang::en', 'readest::learning']),

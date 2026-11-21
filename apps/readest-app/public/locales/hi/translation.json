@@ -610,6 +610,7 @@
   "Save Book Cover": "बुक कवर सहेजें",
   "Auto-save last book cover": "अंतिम पुस्तक कवर को स्वचालित रूप से सहेजें",
   "Back": "वापस",
+  "Back / Close": "वापस / बंद करें",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "पुष्टिकरण ईमेल भेज दिया गया है! कृपया परिवर्तन की पुष्टि करने के लिए अपना पुराना और नया ईमेल पता जांचें।",
   "Failed to update email": "ईमेल अपडेट करने में विफल",
   "New Email": "नया ईमेल",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "आँकड़े मिलाएं",
   "Merge statistics of {{title}}": "{{title}} के आँकड़े मिलाएं",
   "No other books have reading statistics": "किसी और किताब के पढ़ने के आँकड़े नहीं हैं",
-  "Merge another entry into this book:": "इस किताब में कोई और प्रविष्टि मिलाएं:"
+  "Merge another entry into this book:": "इस किताब में कोई और प्रविष्टि मिलाएं:",
+  "Remove {{voice}} from favorites": "{{voice}} को पसंदीदा से हटाएँ",
+  "Add {{voice}} to favorites": "{{voice}} को पसंदीदा में जोड़ें",
+  "Remove from favorites": "पसंदीदा से हटाएँ",
+  "Add to favorites": "पसंदीदा में जोड़ें",
+  "Favorites": "पसंदीदा",
+  "Last Looked Up": "अंतिम बार खोजा गया",
+  "Most Saved Sentences": "सबसे अधिक सहेजे गए वाक्य",
+  "Newest Added": "सबसे नए जोड़े गए",
+  "Oldest Added": "सबसे पुराने जोड़े गए",
+  "Alphabetical A-Z": "वर्णानुक्रम A-Z",
+  "Alphabetical Z-A": "वर्णानुक्रम Z-A",
+  "All Languages": "सभी भाषाएँ"
 }

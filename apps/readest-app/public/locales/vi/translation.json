@@ -606,6 +606,7 @@
   "Save Book Cover": "Lưu bìa sách",
   "Auto-save last book cover": "Tự động lưu bìa sách cuối cùng",
   "Back": "Quay lại",
+  "Back / Close": "Quay lại / Đóng",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Email xác nhận đã được gửi! Vui lòng kiểm tra địa chỉ email cũ và mới của bạn để xác nhận thay đổi.",
   "Failed to update email": "Cập nhật email thất bại",
   "New Email": "Email mới",
@@ -2795,5 +2796,17 @@
   "Merge Statistics": "Gộp thống kê",
   "Merge statistics of {{title}}": "Gộp thống kê của {{title}}",
   "No other books have reading statistics": "Không có sách nào khác có thống kê đọc",
-  "Merge another entry into this book:": "Gộp một mục khác vào sách này:"
+  "Merge another entry into this book:": "Gộp một mục khác vào sách này:",
+  "Remove {{voice}} from favorites": "Xóa {{voice}} khỏi yêu thích",
+  "Add {{voice}} to favorites": "Thêm {{voice}} vào yêu thích",
+  "Remove from favorites": "Xóa khỏi yêu thích",
+  "Add to favorites": "Thêm vào yêu thích",
+  "Favorites": "Yêu thích",
+  "Last Looked Up": "Tra cứu gần nhất",
+  "Most Saved Sentences": "Nhiều câu đã lưu nhất",
+  "Newest Added": "Thêm mới nhất",
+  "Oldest Added": "Thêm cũ nhất",
+  "Alphabetical A-Z": "Theo bảng chữ cái A-Z",
+  "Alphabetical Z-A": "Theo bảng chữ cái Z-A",
+  "All Languages": "Tất cả ngôn ngữ"
 }

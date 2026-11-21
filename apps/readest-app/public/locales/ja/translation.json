@@ -606,6 +606,7 @@
   "Save Book Cover": "本のカバーを保存",
   "Auto-save last book cover": "最後の本のカバーを自動保存",
   "Back": "戻る",
+  "Back / Close": "戻る / 閉じる",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "確認メールを送信しました。変更を確認するために、古いメールアドレスと新しいメールアドレスを確認してください。",
   "Failed to update email": "メールの更新に失敗しました",
   "New Email": "新しいメールアドレス",
@@ -2795,5 +2796,17 @@
   "Merge Statistics": "統計を統合",
   "Merge statistics of {{title}}": "{{title}}の統計を統合",
   "No other books have reading statistics": "読書統計のある本がほかにありません",
-  "Merge another entry into this book:": "この本に統合する項目:"
+  "Merge another entry into this book:": "この本に統合する項目:",
+  "Remove {{voice}} from favorites": "{{voice}}をお気に入りから削除",
+  "Add {{voice}} to favorites": "{{voice}}をお気に入りに追加",
+  "Remove from favorites": "お気に入りから削除",
+  "Add to favorites": "お気に入りに追加",
+  "Favorites": "お気に入り",
+  "Last Looked Up": "最後に調べた順",
+  "Most Saved Sentences": "保存した文が多い順",
+  "Newest Added": "追加日が新しい順",
+  "Oldest Added": "追加日が古い順",
+  "Alphabetical A-Z": "アルファベット順 A-Z",
+  "Alphabetical Z-A": "アルファベット順 Z-A",
+  "All Languages": "すべての言語"
 }

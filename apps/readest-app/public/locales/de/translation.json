@@ -610,6 +610,7 @@
   "Save Book Cover": "Buchcover speichern",
   "Auto-save last book cover": "Letztes Buchcover automatisch speichern",
   "Back": "Zurück",
+  "Back / Close": "Zurück / Schließen",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Bestätigungs-E-Mail gesendet! Bitte überprüfe deine alte und neue E-Mail-Adresse, um die Änderung zu bestätigen.",
   "Failed to update email": "E-Mail konnte nicht aktualisiert werden",
   "New Email": "Neue E-Mail",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "Statistik zusammenführen",
   "Merge statistics of {{title}}": "Statistik von {{title}} zusammenführen",
   "No other books have reading statistics": "Keine anderen Bücher haben eine Lesestatistik",
-  "Merge another entry into this book:": "Einen anderen Eintrag in dieses Buch zusammenführen:"
+  "Merge another entry into this book:": "Einen anderen Eintrag in dieses Buch zusammenführen:",
+  "Remove {{voice}} from favorites": "{{voice}} aus Favoriten entfernen",
+  "Add {{voice}} to favorites": "{{voice}} zu Favoriten hinzufügen",
+  "Remove from favorites": "Aus Favoriten entfernen",
+  "Add to favorites": "Zu Favoriten hinzufügen",
+  "Favorites": "Favoriten",
+  "Last Looked Up": "Zuletzt nachgeschlagen",
+  "Most Saved Sentences": "Meiste gespeicherte Sätze",
+  "Newest Added": "Neueste zuerst",
+  "Oldest Added": "Älteste zuerst",
+  "Alphabetical A-Z": "Alphabetisch A–Z",
+  "Alphabetical Z-A": "Alphabetisch Z–A",
+  "All Languages": "Alle Sprachen"
 }

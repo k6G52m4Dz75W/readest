@@ -33,6 +33,7 @@
   "Updating password ...": "Parol yangilanmoqda...",
   "Your password has been updated": "Parolingiz yangilandi",
   "Back": "Orqaga",
+  "Back / Close": "Orqaga / Yopish",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "Tasdiqlash emaili yuborildi! Oʻzgarishni tasdiqlash uchun eski va yangi email manzillaringizni tekshiring.",
   "Failed to update email": "Emailni yangilab boʻlmadi",
   "New Email": "Yangi email",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "Statistikani birlashtirish",
   "Merge statistics of {{title}}": "{{title}} statistikasini birlashtirish",
   "No other books have reading statistics": "Boshqa hech bir kitobda oʻqish statistikasi yoʻq",
-  "Merge another entry into this book:": "Bu kitobga boshqa yozuvni birlashtirish:"
+  "Merge another entry into this book:": "Bu kitobga boshqa yozuvni birlashtirish:",
+  "Remove {{voice}} from favorites": "{{voice}} ni sevimlilardan olib tashlash",
+  "Add {{voice}} to favorites": "{{voice}} ni sevimlilarga qoʻshish",
+  "Remove from favorites": "Sevimlilardan olib tashlash",
+  "Add to favorites": "Sevimlilarga qoʻshish",
+  "Favorites": "Sevimlilar",
+  "Last Looked Up": "Oxirgi qidirilgan",
+  "Most Saved Sentences": "Eng ko‘p saqlangan gaplar",
+  "Newest Added": "Eng yangi qo‘shilgan",
+  "Oldest Added": "Eng eski qo‘shilgan",
+  "Alphabetical A-Z": "Alifbo bo‘yicha A-Z",
+  "Alphabetical Z-A": "Alifbo bo‘yicha Z-A",
+  "All Languages": "Barcha tillar"
 }

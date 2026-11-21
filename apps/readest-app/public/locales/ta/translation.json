@@ -610,6 +610,7 @@
   "Save Book Cover": "புத்தகக் கோப்பைச் சேமிக்கவும்",
   "Auto-save last book cover": "அවසන් புத்தகக் கோப்பு காலியாக உள்ளது",
   "Back": "பின் செல்ல",
+  "Back / Close": "பின் செல்ல / மூடு",
   "Confirmation email sent! Please check your old and new email addresses to confirm the change.": "உறுதிப்பத்திர மின்னஞ்சல் அனுப்பப்பட்டுள்ளது! மாற்றத்தை உறுதிப்படுத்த உங்கள் பழைய மற்றும் புதிய மின்னஞ்சல் முகவரிகளை சரிபார்க்கவும்.",
   "Failed to update email": "மின்னஞ்சல் புதுப்பிப்பில் தோல்வி",
   "New Email": "புதிய மின்னஞ்சல்",
@@ -2868,5 +2869,17 @@
   "Merge Statistics": "புள்ளிவிவரங்களை இணை",
   "Merge statistics of {{title}}": "{{title}} புள்ளிவிவரங்களை இணை",
   "No other books have reading statistics": "வேறு எந்தப் புத்தகத்துக்கும் வாசிப்பு புள்ளிவிவரங்கள் இல்லை",
-  "Merge another entry into this book:": "இந்தப் புத்தகத்துடன் வேறொரு பதிவை இணை:"
+  "Merge another entry into this book:": "இந்தப் புத்தகத்துடன் வேறொரு பதிவை இணை:",
+  "Remove {{voice}} from favorites": "{{voice}} ஐ பிடித்தவையிலிருந்து நீக்கு",
+  "Add {{voice}} to favorites": "{{voice}} ஐ பிடித்தவையில் சேர்க்கவும்",
+  "Remove from favorites": "பிடித்தவையிலிருந்து நீக்கு",
+  "Add to favorites": "பிடித்தவையில் சேர்க்கவும்",
+  "Favorites": "பிடித்தவை",
+  "Last Looked Up": "கடைசியாகத் தேடியது",
+  "Most Saved Sentences": "அதிகம் சேமித்த வாக்கியங்கள்",
+  "Newest Added": "புதிதாகச் சேர்த்தவை",
+  "Oldest Added": "முதலில் சேர்த்தவை",
+  "Alphabetical A-Z": "அகர வரிசை A-Z",
+  "Alphabetical Z-A": "அகர வரிசை Z-A",
+  "All Languages": "அனைத்து மொழிகள்"
 }
