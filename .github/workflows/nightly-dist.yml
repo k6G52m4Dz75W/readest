@@ -316,7 +316,12 @@ jobs:
           STAMP="${NIGHTLY_VERSION##*-}"
           BUILD_DATE="${STAMP:0:4}-${STAMP:4:2}-${STAMP:6:2}"
           PUB_DATE="${BUILD_DATE}T${STAMP:8:2}:00:00+08:00"
-          jq -s --arg version "$NIGHTLY_VERSION" --arg pub_date "$PUB_DATE" --arg notes "$NOTES_TEXT" \
+          # Number the manifest notes ("1. a" / "2. b"): the updater window's
+          # fallback changelog parser splits on "N. " boundaries, so a plain
+          # newline list renders as ONE merged blob whenever the on-device
+          # release-notes.json fetch fails and the fallback kicks in.
+          NOTES_NUM=$(printf '%s\n' "$NOTES_TEXT" | awk '{print NR". "$0}')
+          jq -s --arg version "$NIGHTLY_VERSION" --arg pub_date "$PUB_DATE" --arg notes "$NOTES_NUM" \
             '{version: $version, pub_date: $pub_date, notes: $notes, platforms: (map(.platforms) | add)}' \
             frag/*.json > latest.json
           NOTES_ARRAY=$(printf '%s\n' "$NOTES_TEXT" | jq -R . | jq -s 'map(select(length > 0))')
