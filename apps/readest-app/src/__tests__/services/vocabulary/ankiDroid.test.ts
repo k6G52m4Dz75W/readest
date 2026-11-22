@@ -10,9 +10,12 @@ vi.mock('@tauri-apps/api/core', async (importOriginal) => ({
 import {
   AnkiError,
   ankiAddNotes,
+  ankiNoteType,
+  ankiSetEntries,
   ankiReadDeck,
   ankiStatus,
   ankiUpdateTags,
+  ankiUpgradeNoteType,
 } from '@/services/vocabulary/ankiDroid';
 
 beforeEach(() => {
@@ -29,6 +32,31 @@ describe('ankiDroid', () => {
     expect(deck).toEqual({ notes: [{ id: 1, fields: ['a'], tags: '' }], cards: undefined });
   });
 
+  it('fills the note type on the upgrade, and reads whether one is needed', async () => {
+    invokeSpy.mockResolvedValue({ outdated: true, id: 5, fields: ['Front', 'Back'] });
+    await expect(ankiNoteType()).resolves.toEqual({
+      outdated: true,
+      id: 5,
+      fields: ['Front', 'Back'],
+    });
+    invokeSpy.mockResolvedValue({});
+    await expect(ankiNoteType()).resolves.toEqual({ outdated: false });
+    invokeSpy.mockResolvedValue({ updated: 2 });
+    const fills = [{ id: 1, word: 'Haus', language: 'de_DE' }];
+    await expect(ankiUpgradeNoteType(fills)).resolves.toBe(2);
+    expect(invokeSpy).toHaveBeenLastCalledWith('plugin:native-bridge|anki_upgrade_note_type', {
+      payload: { notes: fills },
+    });
+  });
+
+  it('sends dictionary entries for empty Entry fields', async () => {
+    invokeSpy.mockResolvedValue({ updated: 1 });
+    await expect(ankiSetEntries([{ id: 1, entry: '<p>a drug</p>' }])).resolves.toBe(1);
+    expect(invokeSpy).toHaveBeenCalledWith('plugin:native-bridge|anki_set_entries', {
+      payload: { notes: [{ id: 1, entry: '<p>a drug</p>' }] },
+    });
+  });
+
   it('turns an error field into an AnkiError with its code', async () => {
     invokeSpy.mockResolvedValue({ error: 'not_ready' });
     const err = await ankiReadDeck([5], true).catch((e: unknown) => e);
@@ -40,7 +68,7 @@ describe('ankiDroid', () => {
     invokeSpy.mockResolvedValue({ added: 1 });
     const note = (deck: string, word: string) => ({
       deck,
-      fields: [word, 'b'] as [string, string],
+      fields: [word, 'b', word, 'fr_FR', ''] as [string, string, string, string, string],
       tags: ['readest'],
     });
     const notes = [note('R::French', 'pain'), note('R::Spanish', 'hola'), note('R::French', 'vin')];
@@ -52,8 +80,8 @@ describe('ankiDroid', () => {
           payload: {
             deckName: 'R::French',
             notes: [
-              { fields: ['pain', 'b'], tags: ['readest'] },
-              { fields: ['vin', 'b'], tags: ['readest'] },
+              { fields: ['pain', 'b', 'pain', 'fr_FR', ''], tags: ['readest'] },
+              { fields: ['vin', 'b', 'vin', 'fr_FR', ''], tags: ['readest'] },
             ],
           },
         },
@@ -63,7 +91,7 @@ describe('ankiDroid', () => {
         {
           payload: {
             deckName: 'R::Spanish',
-            notes: [{ fields: ['hola', 'b'], tags: ['readest'] }],
+            notes: [{ fields: ['hola', 'b', 'hola', 'fr_FR', ''], tags: ['readest'] }],
           },
         },
       ],
