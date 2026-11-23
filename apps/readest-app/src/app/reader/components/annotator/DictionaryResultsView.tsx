@@ -85,6 +85,17 @@ export interface UseDictionaryResultsArgs {
   contextOnly?: boolean;
 }
 
+// The lookup Pin to Notebook hands over. A word reached through a link wasn't
+// selected in the passage or sentence, so it goes without them, as the popup
+// itself asks and saves it.
+export const lookupToPin = (
+  { word, lang, selection, capture, contextOnly }: UseDictionaryResultsArgs,
+  { canGoBack, currentWord }: Pick<DictionaryResultsState, 'canGoBack' | 'currentWord'>,
+): UseDictionaryResultsArgs =>
+  canGoBack
+    ? { word: currentWord, lang, capture: capture && { lang: capture.lang }, contextOnly }
+    : { word, lang, selection, capture, contextOnly };
+
 export interface VocabularyCapture {
   /** Vocabulary language of the book (see `vocabularyLang`). */
   lang: string;
@@ -791,7 +802,11 @@ export const DictionaryResultsHeader: React.FC<DictionaryResultsHeaderProps> = (
   );
 };
 
-interface DictionaryResultsBodyProps extends DictionaryResultsState {}
+interface DictionaryResultsBodyProps extends DictionaryResultsState {
+  /** In the Notebook a tap only unfolds a card: one that clears a selection
+   * must not fold it and lose the place (#7788). */
+  keepOpenOnTap?: boolean;
+}
 
 export const DictionaryResultsBody: React.FC<DictionaryResultsBodyProps> = ({
   visibleDefinitionProviders,
@@ -808,6 +823,7 @@ export const DictionaryResultsBody: React.FC<DictionaryResultsBodyProps> = ({
   fontScale,
   zoomedImageSrc,
   closeZoomedImage,
+  keepOpenOnTap = false,
 }) => {
   const _ = useTranslation();
   const safeAreaInsets = useThemeStore((s) => s.safeAreaInsets);
@@ -838,6 +854,7 @@ export const DictionaryResultsBody: React.FC<DictionaryResultsBodyProps> = ({
                 tabIndex={0}
                 aria-expanded={expanded}
                 onClick={(e) => {
+                  if (keepOpenOnTap && expanded) return;
                   // Releasing a drag that selected text isn't a tap (#7731). A
                   // double click still toggles twice, as before.
                   if (e.detail < 2 && document.getSelection()?.isCollapsed === false) return;

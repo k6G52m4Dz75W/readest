@@ -66,6 +66,7 @@ import {
   transformStylesheet,
 } from '@/utils/style';
 import { applyScrollableStyle, applyTableTouchScroll } from '@/utils/scrollable';
+import { bindInlineEventHandlers } from '@/utils/inlineEventHandlers';
 import { classifyAndTagStandaloneDiagrams } from '@/utils/imageClassifier';
 import { mountAdditionalFonts, mountCustomFont } from '@/styles/fonts';
 import { mountWhiteTransparencyFilter } from '@/utils/imageBackground';
@@ -212,6 +213,7 @@ const FoliateViewer: React.FC<{
   const getViewSettings = useReaderStore((s) => s.getViewSettings);
   const setViewSettings = useReaderStore((s) => s.setViewSettings);
   const getParallels = useParallelViewStore((s) => s.getParallels);
+  const getSectionOffset = useParallelViewStore((s) => s.getSectionOffset);
   const getBookData = useBookDataStore((s) => s.getBookData);
   const getConfig = useBookDataStore((s) => s.getConfig);
   const setConfig = useBookDataStore((s) => s.setConfig);
@@ -707,7 +709,7 @@ const FoliateViewer: React.FC<{
         if (section?.loadHref) observeDynamicResources(detail.doc, section.loadHref);
       }
 
-      // Inline scripts in tauri platforms are not executed by default
+      // Inline scripts and event handlers in tauri platforms are not executed by default
       if (viewSettings.allowScript && isTauriAppPlatform()) {
         evalInlineScripts(detail.doc);
       }
@@ -796,6 +798,7 @@ const FoliateViewer: React.FC<{
           console.error(`Error executing iframe script ${index + 1}:`, error);
         }
       });
+      bindInlineEventHandlers(doc);
     }
   };
 
@@ -911,7 +914,8 @@ const FoliateViewer: React.FC<{
         if (key !== bookKey) {
           const target = getView(key)?.renderer;
           if (target) {
-            target.goTo?.({ index: detail.index, anchor: detail.fraction });
+            const index = detail.index + getSectionOffset(bookKey, key);
+            target.goTo?.({ index, anchor: detail.fraction });
           }
         }
       });
