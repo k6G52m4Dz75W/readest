@@ -34,6 +34,7 @@ import {
 import { buildSelectionContext } from '@/services/dictionaries/contextDictionary';
 import { getContextTranslator } from '@/services/dictionaries/providers/contextProvider';
 import type { DictionarySelectionContext } from '@/services/dictionaries/types';
+import { setXRayLookup, useXRayStore } from '@/services/xray/xrayService';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useResponsiveSize } from '@/hooks/useResponsiveSize';
 import { useDeviceControlStore } from '@/store/deviceStore';
@@ -48,6 +49,7 @@ import { usePageboundSync } from '../../hooks/usePageboundSync';
 import { useNotionSync } from '../../hooks/useNotionSync';
 import { useObsidianSync } from '../../hooks/useObsidianSync';
 import { useTextSelector } from '../../hooks/useTextSelector';
+import { useXRayAutoUpdate } from '../../hooks/useXRayAutoUpdate';
 import { useSaveBooknoteNoteText } from '../../hooks/useSaveBooknoteNoteText';
 import { placeToolbar, Point, Position, Rect, TextSelection } from '@/utils/sel';
 import {
@@ -74,6 +76,7 @@ import { runSimpleCC } from '@/utils/simplecc';
 import { getWordCount, isSingleLookupTerm } from '@/utils/word';
 import { getIndexFromCfi } from '@/utils/cfi';
 import { writeTextToClipboard } from '@/utils/clipboard';
+import { formatCitation, getPublishedYear, getTocPathLabels } from '@/utils/citation';
 import { AnnotationLinkType, buildAnnotationUrl } from '@/utils/deeplink';
 import { DEFAULT_NOTE_EXPORT_CONFIG } from '@/services/constants';
 import { canShareText, shareSelectedText } from '@/utils/share';
@@ -166,6 +169,7 @@ const PositionFollowers: React.FC<{
 }> = ({ bookKey, annotationIndex, contentEpoch }) => {
   const getView = useReaderStore((s) => s.getView);
   const progress = useBookProgress(bookKey);
+  useXRayAutoUpdate(bookKey, progress?.location);
   useBookOrbitNotesSync(bookKey);
   useGrimmoryNotesSync(bookKey);
   useHardcoverSync(bookKey);
@@ -283,6 +287,8 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
   const [dictionaryInSheet, setDictionaryInSheet] = useState(false);
   // Set by the Context Dictionary tool: the lookup asks the AI alone (#7497).
   const [dictionaryContextOnly, setDictionaryContextOnly] = useState(false);
+  // Set by the X-Ray tool: the lookup asks the X-Ray alone.
+  const [dictionaryXRayOnly, setDictionaryXRayOnly] = useState(false);
   const [showDeepLPopup, setShowDeepLPopup] = useState(false);
   const [showProofreadPopup, setShowProofreadPopup] = useState(false);
   const [trianglePosition, setTrianglePosition] = useState<Position>();
@@ -449,14 +455,31 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
   const androidSelectionHandlerHeight = 0;
 
   // The keyboard a popup's text field raises can shorten the window, and the
-  // popup stays a popup (#7570): place it again against the new size.
-  const [windowResizes, setWindowResizes] = useState(0);
+  // popup stays a popup (#7570): place it again against the new size. A pinned
+  // panel resizes the book cell without resizing the window.
+  const [resizes, setResizes] = useState(0);
   useEffect(() => {
     if (!showingPopup) return;
-    const onResize = () => setWindowResizes((count) => count + 1);
+    const onResize = () => setResizes((count) => count + 1);
     window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, [showingPopup]);
+    const cell = document.querySelector(`#gridcell-${bookKey}`);
+    let frame = 0;
+    // A frame later, once a footnote popup holding the selection has moved to
+    // fit the cell too.
+    const observer =
+      cell && typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(() => {
+            cancelAnimationFrame(frame);
+            frame = requestAnimationFrame(onResize);
+          })
+        : null;
+    if (cell) observer?.observe(cell);
+    return () => {
+      window.removeEventListener('resize', onResize);
+      observer?.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [bookKey, showingPopup]);
 
   // Reposition popups on scroll without dismissing them
   const repositionPopups = useCallback(() => {
@@ -517,7 +540,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
     annotPopupWidth,
     annotPopupHeight,
     footnotePopupDir,
-    windowResizes,
+    resizes,
   ]);
 
   useEffect(() => {
@@ -573,6 +596,7 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
     selection?.range
       ? {
           ...buildSelectionContext(selection.range),
+          bookKey,
           bookTitle: bookData.book?.title,
           bookAuthor: bookData.book?.author,
           targetLang: viewSettings.translateTargetLang,
@@ -1585,9 +1609,31 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
     setShowProofreadPopup(false);
   };
 
+  // The book, chapter and printed page of the passage, for Copy with Citation.
+  // TOC CFIs exist only in reflowable EPUBs, so the chapter comes from the
+  // range. A footnote popup's range is not in the section document: it is
+  // cited by the chapter being read, without a page.
+  const getSelectionCitation = (sel: TextSelection) => {
+    const { book, bookDoc, isFixedLayout } = bookData;
+    const { tocItem, pageItem } = sel.popup
+      ? {}
+      : (view?.getProgressOf(sel.index, sel.range) ?? {});
+    const href = sel.popup ? getBookProgress(bookKey)?.sectionHref : tocItem?.href;
+    const page = sel.popup ? undefined : isFixedLayout ? String(sel.page) : pageItem?.label;
+    return formatCitation({
+      author: book?.author ?? '',
+      title: book?.title ?? '',
+      year: getPublishedYear(book?.metadata?.published),
+      chapters: href ? getTocPathLabels(bookDoc?.toc ?? [], href) : [],
+      page: page ? _('p. {{page}}', { page }) : undefined,
+    });
+  };
+
   const handleCopy = (dismissPopup = true) => {
     if (!selection || !selection.text) return;
-    const textToCopy = selection.text;
+    const textToCopy = viewSettings?.copyWithCitation
+      ? `${selection.text}\n\n${getSelectionCitation(selection)}`
+      : selection.text;
     setTimeout(() => {
       // Delay to ensure it won't be overridden by system clipboard actions
       void writeTextToClipboard(textToCopy);
@@ -2131,8 +2177,23 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
     void suppressNativeSelectionHandles();
     setDictionaryInSheet(isSheetViewport());
     setDictionaryContextOnly(contextOnly);
+    setDictionaryXRayOnly(false);
     setShowDictionaryPopup(true);
     return false;
+  };
+
+  // Looks the name up in the X-Ray alone: in its Notebook tab while that is on
+  // screen, else in the dictionary popup.
+  const handleXRay = () => {
+    if (!selection?.text) return;
+    setXRayLookup(selection.text);
+    if (useXRayStore.getState().isDocked) return;
+    setShowAnnotPopup(false);
+    void suppressNativeSelectionHandles();
+    setDictionaryInSheet(isSheetViewport());
+    setDictionaryContextOnly(false);
+    setDictionaryXRayOnly(true);
+    setShowDictionaryPopup(true);
   };
 
   // Pin to Notebook in the popup: the lookup moves into the Dictionary tab of a
@@ -2140,18 +2201,19 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
   // From the instant dictionary that is the toolbar only with
   // keepSelectionAfterLookup, as for its later lookups into the tab (#6454).
   const handlePinDictionary = (lookup: UseDictionaryResultsArgs) => {
-    useDictionaryDockStore.getState().setLookup(lookup);
+    const tab = lookup.xrayOnly ? 'xray' : 'dictionary';
+    if (!lookup.xrayOnly) useDictionaryDockStore.getState().setLookup(lookup);
     // The Notebook shows the book the sidebar is on.
     useSidebarStore.getState().setSideBarBookKey(bookKey);
     const { setNotebookActiveTab, setNotebookPin, setNotebookVisible } =
       useNotebookStore.getState();
-    setNotebookActiveTab('dictionary');
+    setNotebookActiveTab(tab);
     setNotebookPin(true);
     setNotebookVisible(true);
     void saveSysSettings(envConfig, 'globalReadSettings', {
       ...settings.globalReadSettings,
       isNotebookPinned: true,
-      notebookActiveTab: 'dictionary',
+      notebookActiveTab: tab,
     });
     handleDismissPopupShowToolbar();
   };
@@ -2856,6 +2918,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
           // Premium, like the Context Dictionary switch in Manage Dictionaries.
           disabled: !isCustomTranslatorAllowed(token) || !getContextTranslator(),
         };
+      case 'xray':
+        return {
+          tooltipText: _(label),
+          Icon,
+          onClick: handleXRay,
+          disabled: !isCustomTranslatorAllowed(token) || !getContextTranslator(),
+        };
       case 'translate':
         return { tooltipText: _(label), Icon, onClick: handleTranslation };
       case 'tts':
@@ -2961,8 +3030,10 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
                 word={selection?.text as string}
                 lang={bookData.bookDoc?.metadata.language as string}
                 selection={dictionarySelection}
-                capture={dictionaryCapture}
+                // A name looked up in the X-Ray is not vocabulary.
+                capture={dictionaryXRayOnly ? undefined : dictionaryCapture}
                 contextOnly={dictionaryContextOnly}
+                xrayOnly={dictionaryXRayOnly}
                 onDismiss={handleDismissPopupShowToolbar}
                 onManage={onManage}
                 // The Notebook pins beside the page from 640 px wide, as on a
@@ -2977,12 +3048,13 @@ const Annotator: React.FC<{ bookKey: string; contentInsets: Insets; gridInsets?:
               word={selection?.text as string}
               lang={bookData.bookDoc?.metadata.language as string}
               selection={dictionarySelection}
-              capture={dictionaryCapture}
+              capture={dictionaryXRayOnly ? undefined : dictionaryCapture}
               position={dictPopupPosition}
               trianglePosition={trianglePosition}
               popupWidth={dictPopupWidth}
               popupHeight={dictPopupHeight}
               contextOnly={dictionaryContextOnly}
+              xrayOnly={dictionaryXRayOnly}
               onDismiss={handleDismissPopupShowToolbar}
               onManage={onManage}
               onPin={handlePinDictionary}

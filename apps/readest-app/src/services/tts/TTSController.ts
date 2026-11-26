@@ -6,6 +6,7 @@ import { convertFileSrc } from '@tauri-apps/api/core';
 import { transformTTSSectionDocument } from './transformDoc';
 import { filterSSMLWithLang, parseSSMLMarks, truncateSSMLAfterMark } from '@/utils/ssml';
 import * as CFI from 'foliate-js/epubcfi.js';
+import { startInNextText } from '@/utils/cfi';
 import { Overlayer } from 'foliate-js/overlayer.js';
 import { adjacentChunkAnchor } from 'foliate-js/section-chunks.js';
 import {
@@ -444,10 +445,7 @@ export class TTSController extends EventTarget {
   //     and the in-app player drifts out of sync until the app is foregrounded.
   //     See #5561. Only for PAUSED_KEEP_ALIVE_MS, though: the tone keeps the
   //     audio output open, so a session left paused stopped the device from
-  //     sleeping (#7546). The looping silent element from unblockAudio() goes
-  //     too: it holds an output of its own, and Android needs it for neither
-  //     media keys (the native session has them) nor autoplay (wry turns the
-  //     gesture requirement off). Play from the app still resumes after that.
+  //     sleeping (#7546). Play from the app still resumes after that.
   #syncAudioKeepAlive() {
     clearTimeout(this.#pausedKeepAliveTimer);
     const directSpeak = this.ttsClient.getCapabilities().mediaClock === false;
@@ -461,7 +459,6 @@ export class TTSController extends EventTarget {
       this.#pausedKeepAliveTimer = setTimeout(() => {
         if (!this.state.includes('paused')) return;
         stopAudioKeepAlive();
-        releaseUnblockAudio();
       }, PAUSED_KEEP_ALIVE_MS);
     }
   }
@@ -548,7 +545,19 @@ export class TTSController extends EventTarget {
         // doc (compareBoundaryPoints throws cross-document).
         const cfi = view.getCFI(sectionIndex, lastRange);
         const anchored = view.resolveCFI(cfi).anchor(doc);
-        if (anchored) newTts.from(anchored); // position the iterator; discard SSML
+        const ssml = anchored ? newTts.from(startInNextText(anchored)) : undefined;
+        // foliate's from() positions the iterator but forgets the sentence
+        // being read: a paused reopen showed no highlight, lyric line or clock,
+        // and the next reopen had no seed and restarted the chapter (#7882).
+        // Put the sentence back; reapplyCurrentHighlight below draws it.
+        // Narration's from() keeps its own mark.
+        const mark = ssml && !narration ? parseSSMLMarks(ssml).marks[0] : undefined;
+        if (mark) {
+          this.#suppressMarkHighlight = true;
+          const range = newTts.setMark(mark.name);
+          this.#suppressMarkHighlight = false;
+          if (range) this.#lastSetMark = { name: mark.name, range };
+        }
       } catch (err) {
         console.warn('[TTS] attachView re-seed failed', err);
       }
@@ -2220,7 +2229,7 @@ export class TTSController extends EventTarget {
     if (!start || !end || section < start.sectionIndex || section > end.sectionIndex) return null;
     const lineOf = (cfi: string) => {
       const range = this.view.resolveCFI(cfi).anchor(this.#ttsDoc!);
-      return range ? timeline.indexOfRange(range) : -1;
+      return range ? timeline.indexOfRange(startInNextText(range)) : -1;
     };
     const first = start.sectionIndex < section ? 0 : lineOf(start.cfi);
     const last = end.sectionIndex > section ? timeline.length - 1 : lineOf(end.cfi);
@@ -2244,7 +2253,7 @@ export class TTSController extends EventTarget {
     const { sectionIndex, cfi } = this.#loopA!;
     if (sectionIndex !== this.#ttsSectionIndex) await this.#initTTSForSection(sectionIndex);
     const range = this.view.resolveCFI(cfi).anchor(this.#ttsDoc!);
-    await this.#handleNavigationWithSSML(this.#getTts()?.from(range), isPlaying);
+    await this.#handleNavigationWithSSML(this.#getTts()?.from(startInNextText(range)), isPlaying);
     if (!isPlaying) this.reapplyCurrentHighlight();
   }
 

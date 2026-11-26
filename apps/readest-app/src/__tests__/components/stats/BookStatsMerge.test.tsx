@@ -56,6 +56,8 @@ const fakeDb = (books: BookStats[]) => {
   const fake = {
     getQuarterHourDurations: async () => [],
     getBookQuarterHourDurations: async () => [],
+    getReadingSpeedSamples: async () => [],
+    getReadingSpeedTotals: async () => [],
     getReadingTotals: async () => ({ seconds: 0, books: left.length, pages: 0 }),
     getBookStats: vi.fn(async (md5?: string) => left.filter((b) => !md5 || b.md5 === md5)),
   };
@@ -143,7 +145,8 @@ describe('Statistics by Book: Merge', () => {
     ]);
     fireEvent.click(pickerRows()[0]!);
     const alert = await screen.findByRole('alert');
-    expect(within(alert).getByText('Merge 2 entries into “Dune”?')).toBeTruthy();
+    // counts the three entries ticked, as the picker did, not the two others
+    expect(within(alert).getByText('Merge 3 entries into “Dune”?')).toBeTruthy();
     fireEvent.click(within(alert).getByRole('button', { name: 'Merge' }));
 
     await waitFor(() => expect(screen.getAllByText('Dune')).toHaveLength(1));

@@ -331,23 +331,27 @@ vi.mock('@/app/reader/components/annotator/DictionaryPopup', () => ({
     trianglePosition,
     popupHeight,
     contextOnly,
+    xrayOnly,
     onPin,
   }: {
     word: string;
     onDismiss: () => void;
     position: { point: { y: number } };
-    trianglePosition: { point: { y: number } };
+    trianglePosition: { point: { x: number; y: number } };
     popupHeight: number;
     contextOnly?: boolean;
+    xrayOnly?: boolean;
     onPin?: (lookup: { word: string; lang?: string }) => void;
   }) => (
     <div
       data-testid='dictionary-surface'
       data-kind='popup'
       data-context-only={String(!!contextOnly)}
+      data-xray-only={String(!!xrayOnly)}
       data-word={word.trim()}
       data-top={position.point.y}
       data-height={popupHeight}
+      data-triangle-x={trianglePosition.point.x}
       data-triangle-y={trianglePosition.point.y}
     >
       <button type='button' data-testid='dictionary-dismiss' onClick={onDismiss} />
@@ -365,17 +369,20 @@ vi.mock('@/app/reader/components/annotator/DictionarySheet', () => ({
     word,
     onDismiss,
     contextOnly,
+    xrayOnly,
     onPin,
   }: {
     word: string;
     onDismiss: () => void;
     contextOnly?: boolean;
+    xrayOnly?: boolean;
     onPin?: (lookup: { word: string; lang?: string }) => void;
   }) => (
     <div
       data-testid='dictionary-surface'
       data-kind='sheet'
       data-context-only={String(!!contextOnly)}
+      data-xray-only={String(!!xrayOnly)}
       data-word={word.trim()}
     >
       <button type='button' data-testid='dictionary-dismiss' onClick={onDismiss} />
@@ -399,6 +406,7 @@ vi.mock('@/app/reader/components/annotator/ProofreadPopup', () => ({
 }));
 
 import Annotator from '@/app/reader/components/annotator/Annotator';
+import { useXRayStore } from '@/services/xray/xrayService';
 import { useDictionaryDockStore } from '@/store/dictionaryDockStore';
 
 const selectText = async (text = 'selected text') => {
@@ -452,6 +460,7 @@ beforeEach(() => {
   h.sidebar.isSideBarPinned = false;
   h.viewSettings.keepSelectionAfterLookup = false;
   useDictionaryDockStore.setState({ lookup: null, isDocked: false });
+  useXRayStore.setState({ lookup: null, isDocked: false });
   vi.clearAllMocks();
 });
 
@@ -568,6 +577,55 @@ describe('the Context Dictionary tool (#7497)', () => {
     await selectText('Welten');
 
     const button = screen.getByRole('button', { name: 'Context Dictionary' }) as HTMLButtonElement;
+    expect(button.disabled).toBe(true);
+  });
+});
+
+describe('the X-Ray tool', () => {
+  test('asks the X-Ray alone and saves no vocabulary; Dictionary asks every one', async () => {
+    h.viewSettings.annotationToolbarItems = ['dictionary', 'xray'];
+    render(<Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />);
+    await selectText('Anna');
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'X-Ray' }));
+    });
+    expect(screen.getByTestId('dictionary-surface').dataset['xrayOnly']).toBe('true');
+    expect(useXRayStore.getState().lookup?.word).toBe('Anna');
+    expect(useDictionaryDockStore.getState().lookup).toBeNull();
+
+    act(() => {
+      fireEvent.click(screen.getByTestId('dictionary-dismiss'));
+    });
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Dictionary' }));
+    });
+    expect(screen.getByTestId('dictionary-surface').dataset['xrayOnly']).toBe('false');
+  });
+
+  test('looks up in its own Notebook tab while that is on screen', async () => {
+    useXRayStore.setState({ isDocked: true });
+    h.viewSettings.annotationToolbarItems = ['xray'];
+    render(<Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />);
+    await selectText('Boris');
+
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'X-Ray' }));
+    });
+    expect(screen.queryByTestId('dictionary-surface')).toBeNull();
+    expect(useXRayStore.getState().lookup?.word).toBe('Boris');
+  });
+
+  test.each([
+    ['an OpenAI-compatible translator', () => (h.contextTranslator = undefined)],
+    ['premium', () => (h.token = null)],
+  ])('is unavailable without %s', async (_name, withhold) => {
+    withhold();
+    h.viewSettings.annotationToolbarItems = ['xray'];
+    render(<Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />);
+    await selectText('Anna');
+
+    const button = screen.getByRole('button', { name: 'X-Ray' }) as HTMLButtonElement;
     expect(button.disabled).toBe(true);
   });
 });
@@ -849,6 +907,61 @@ describe('the instant dictionary hands the selection back when it closes', () =>
       delete (Range.prototype as { getClientRects?: unknown }).getClientRects;
       gridCell.remove();
       setViewport(innerWidth, innerHeight);
+    }
+  });
+
+  test('places the popup again when a pinned panel narrows the cell', async () => {
+    const observers: ResizeObserverCallback[] = [];
+    vi.stubGlobal(
+      'ResizeObserver',
+      class {
+        constructor(callback: ResizeObserverCallback) {
+          observers.push(callback);
+        }
+        observe() {}
+        disconnect() {}
+      },
+    );
+    const { innerWidth, innerHeight } = window;
+    Object.defineProperty(window, 'innerWidth', { value: 1180, configurable: true });
+    Object.defineProperty(window, 'innerHeight', { value: 820, configurable: true });
+    // The window keeps its size; the cell narrows, and the word reflows with it.
+    let cellWidth = 1180;
+    let gridCell = document.querySelector<HTMLElement>('#gridcell-book-1');
+    if (!gridCell) {
+      gridCell = document.createElement('div');
+      gridCell.id = 'gridcell-book-1';
+      document.body.append(gridCell);
+    }
+    gridCell.getBoundingClientRect = () => new DOMRect(0, 0, cellWidth, 820);
+    Object.defineProperty(Range.prototype, 'getClientRects', {
+      configurable: true,
+      value: () => [new DOMRect(cellWidth - 200, 300, 100, 20)],
+    });
+    h.realPopupGeometry = true;
+    try {
+      render(
+        <Annotator bookKey='book-1' contentInsets={{ top: 0, right: 0, bottom: 0, left: 0 }} />,
+      );
+      await selectWord();
+      const popup = screen.getByTestId('dictionary-surface');
+      expect(Number(popup.dataset['triangleX'])).toBe(1030);
+
+      cellWidth = 600;
+      await act(async () => {
+        for (const callback of observers) callback([], {} as ResizeObserver);
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      });
+
+      expect(screen.getByTestId('dictionary-surface')).toBe(popup);
+      expect(Number(popup.dataset['triangleX']), 'popup anchor').toBe(450);
+    } finally {
+      h.realPopupGeometry = false;
+      delete (Range.prototype as { getClientRects?: unknown }).getClientRects;
+      gridCell.remove();
+      Object.defineProperty(window, 'innerWidth', { value: innerWidth, configurable: true });
+      Object.defineProperty(window, 'innerHeight', { value: innerHeight, configurable: true });
+      vi.unstubAllGlobals();
     }
   });
 

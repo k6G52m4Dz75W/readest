@@ -1,4 +1,5 @@
 import clsx from 'clsx';
+import dynamic from 'next/dynamic';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import { useSettingsStore } from '@/store/settingsStore';
@@ -29,6 +30,8 @@ import DictionaryView from './DictionaryView';
 import NotebookHeader from './Header';
 import NotebookEditor from './NotebookEditor';
 import NotebookTabNavigation from './NotebookTabNavigation';
+
+const XRayView = dynamic(() => import('./XRayView'), { ssr: false });
 
 const MIN_NOTEBOOK_WIDTH = 0.15;
 const MAX_NOTEBOOK_WIDTH = 0.45;
@@ -88,9 +91,18 @@ const Notebook: React.FC = () => {
 
   useShortcuts({ onEscape: handleHideNotebookShortcut }, [handleHideNotebookShortcut]);
 
+  const isEink =
+    (sideBarBookKey ? getViewSettings(sideBarBookKey)?.isEink : undefined) ??
+    settings.globalViewSettings?.isEink;
+
+  useEffect(() => {
+    if (isNotebookVisible) updateAppTheme(isEink ? 'base-100' : 'base-200');
+  }, [isNotebookVisible, isEink, updateAppTheme]);
+
+  // Only a visibility change resets the color: an e-ink change while hidden
+  // must not repaint over an open sidebar.
   useEffect(() => {
     if (isNotebookVisible) {
-      updateAppTheme('base-200');
       overlayRef.current = document.querySelector('.overlay') as HTMLDivElement | null;
     } else {
       updateAppTheme('base-100');
@@ -268,6 +280,8 @@ const Notebook: React.FC = () => {
             </div>
           )}
           <NotebookHeader
+            bookKey={sideBarBookKey}
+            activeTab={notebookActiveTab}
             isPinned={isNotebookPinned}
             isFullScreenMobile={isMobile && isFullHeightInMobile}
             handleClose={hideNotebook}
@@ -279,7 +293,9 @@ const Notebook: React.FC = () => {
             <AIAssistant key={activeConversationId ?? 'new'} bookKey={sideBarBookKey} />
           </div>
         ) : notebookActiveTab === 'dictionary' ? (
-          <DictionaryView bookKey={sideBarBookKey} />
+          <DictionaryView />
+        ) : notebookActiveTab === 'xray' ? (
+          <XRayView key={sideBarBookKey} bookKey={sideBarBookKey} />
         ) : (
           <NotebookEditor
             bookKey={sideBarBookKey}

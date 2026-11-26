@@ -1,12 +1,13 @@
 import clsx from 'clsx';
 import React from 'react';
-import { PiNotePencil, PiRobot } from 'react-icons/pi';
-import { LuBookA } from 'react-icons/lu';
 
 import { useEnv } from '@/context/EnvContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsStore } from '@/store/settingsStore';
+import { BUILTIN_PROVIDER_IDS } from '@/services/dictionaries/types';
+import { useCustomDictionaryStore } from '@/store/customDictionaryStore';
 import { NotebookTab } from '@/store/notebookStore';
+import { getNotebookTabs } from './notebookTabs';
 
 interface NotebookTabNavigationProps {
   activeTab: NotebookTab;
@@ -22,33 +23,20 @@ const NotebookTabNavigation: React.FC<NotebookTabNavigationProps> = ({
   const { settings } = useSettingsStore();
   const aiEnabled = settings?.aiSettings?.enabled ?? false;
 
-  // The Dictionary tab keeps the latest lookup beside the notes (#7730).
-  const tabs: NotebookTab[] = aiEnabled ? ['notes', 'ai', 'dictionary'] : ['notes', 'dictionary'];
-
-  const getTabLabel = (tab: NotebookTab) => {
-    switch (tab) {
-      case 'notes':
-        return _('Notes');
-      case 'ai':
-        return _('AI');
-      case 'dictionary':
-        return _('Dictionary');
-      default:
-        return '';
-    }
-  };
-
+  // The Dictionary tab keeps the latest lookup beside the notes (#7730). The
+  // X-Ray tab is there once the X-Ray is on or was pinned.
+  const xrayEnabled = useCustomDictionaryStore(
+    (s) => s.settings.providerEnabled[BUILTIN_PROVIDER_IDS.xray],
+  );
+  const tabs: NotebookTab[] = ['notes'];
+  if (aiEnabled) tabs.push('ai');
+  tabs.push('dictionary');
+  if (xrayEnabled || activeTab === 'xray') tabs.push('xray');
+  const tabInfo = getNotebookTabs(_);
+  const getTabLabel = (tab: NotebookTab) => tabInfo[tab].label;
   const getTabIcon = (tab: NotebookTab) => {
-    switch (tab) {
-      case 'notes':
-        return <PiNotePencil className='mx-auto' size={20} />;
-      case 'ai':
-        return <PiRobot className='mx-auto' size={20} />;
-      case 'dictionary':
-        return <LuBookA className='mx-auto' size={20} />;
-      default:
-        return null;
-    }
+    const Icon = tabInfo[tab].icon;
+    return <Icon className='mx-auto' size={20} />;
   };
 
   // Lines up with the footer bar's top rule on e-ink, as the sidebar's does.

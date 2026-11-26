@@ -266,6 +266,8 @@ export const DEFAULT_SYSTEM_SETTINGS: Partial<SystemSettings> = {
   libraryThenSortBy: 'none',
   libraryThenSortAscending: true,
   libraryGroupBy: LibraryGroupByType.Group,
+  libraryGroupByExpanded: false,
+  librarySortByExpanded: false,
   libraryCoverFit: 'crop',
   libraryAutoColumns: true,
   libraryColumns: 6,
@@ -613,6 +615,7 @@ export const DEFAULT_ANNOTATOR_CONFIG: AnnotatorConfig = {
   keepSelectionAfterLookup: false,
   annotationToolbarItems: DEFAULT_ANNOTATION_TOOLBAR_ITEMS,
   copyToNotebook: false,
+  copyWithCitation: false,
   noteExportConfig: DEFAULT_NOTE_EXPORT_CONFIG,
 };
 
