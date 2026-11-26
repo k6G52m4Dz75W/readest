@@ -75,7 +75,7 @@ describe('optInTelemetry / optOutTelemetry', () => {
 
 describe('rollIntoTelemetryPromptBucket', () => {
   it('is true when the rng falls under the bucket rate', () => {
-    expect(rollIntoTelemetryPromptBucket(() => 0)).toBe(true);
+    expect(rollIntoTelemetryPromptBucket(() => 0)).toBe(TELEMETRY_PROMPT_BUCKET_RATE > 0);
     expect(rollIntoTelemetryPromptBucket(() => TELEMETRY_PROMPT_BUCKET_RATE - 1e-9)).toBe(true);
   });
 

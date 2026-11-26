@@ -6,7 +6,7 @@ export const TELEMETRY_DECISION_KEY = 'readest-telemetry-decision';
 export type TelemetryDecision = 'opt-in' | 'opt-out' | 'pending';
 
 /** Fraction of new users shown the consent prompt; the rest are opted out silently. */
-export const TELEMETRY_PROMPT_BUCKET_RATE = 0.1;
+export const TELEMETRY_PROMPT_BUCKET_RATE = 0;
 
 export const hasOptedOutTelemetry = () => {
   return localStorage.getItem(TELEMETRY_OPT_OUT_KEY) === 'true';
