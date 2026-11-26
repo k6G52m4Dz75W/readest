@@ -25,7 +25,8 @@ export const usesScreenPages = (
   isFixedLayout: boolean | undefined,
   sections: unknown[] | undefined,
 ) =>
-  viewSettings?.stablePageNumbers === false &&
+  !!viewSettings &&
+  viewSettings.stablePageNumbers !== true &&
   viewSettings.progressStyle === 'fraction' &&
   !viewSettings.scrolled &&
   !isFixedLayout &&

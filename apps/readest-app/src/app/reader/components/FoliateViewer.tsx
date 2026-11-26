@@ -414,9 +414,9 @@ const FoliateViewer: React.FC<{
       ? getLockedPanX(viewRef.current, getViewSettings(bookKey))
       : undefined;
     if (panX !== undefined && panX !== getConfig(bookKey)?.panX) setConfig(bookKey, { panX });
-    // Stable page numbers (the default) keep the byte-grid pair and need no
-    // measurements; only the screen-counted readout samples chapters.
-    if (getViewSettings(bookKey)?.stablePageNumbers !== false) return;
+    // Stable page numbers (fork default: off) keep the byte-grid pair and need
+    // no measurements; only the screen-counted readout samples chapters.
+    if (getViewSettings(bookKey)?.stablePageNumbers === true) return;
     sampleChapterScreens(detail.section?.current);
   }, [bookKey, setProgress, cancelRelocateScheduled, isWipeAhead, sampleChapterScreens]);
 
@@ -502,7 +502,7 @@ const FoliateViewer: React.FC<{
     // readouts keep the old numbers until the next page turn (#7445). The
     // entry marker stays dropped: a setting that does lay the book out again
     // relocates in this chapter afterwards and re-takes the snapshot.
-    if (stablePageNumbers !== false) return;
+    if (stablePageNumbers === true) return;
     sampleChapterScreens(viewRef.current?.renderer?.primaryIndex);
     lastSampledSpineRef.current = null;
   }, [

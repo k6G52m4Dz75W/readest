@@ -528,7 +528,8 @@ export const DEFAULT_VIEW_CONFIG: ViewConfig = {
   showBatteryPercentage: true,
   use24HourClock: false,
   showPaginationButtons: false,
-  stablePageNumbers: true,
+  // Fork default: screen-counted page numbers (stable page numbers opt-in).
+  stablePageNumbers: false,
   progressStyle: 'fraction',
   referencePageCount: 0,
 

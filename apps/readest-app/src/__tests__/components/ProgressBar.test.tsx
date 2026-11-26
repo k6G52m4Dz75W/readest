@@ -219,10 +219,23 @@ describe('ProgressBar — calibrated page pair', () => {
     };
   };
 
-  it('keeps the stable byte-grid pair by default', () => {
+  it('shows the screen-counted pair by default', () => {
     setupFraction({
       sections: [{ size: 1500 }, { size: 1500 }, { size: 15000 }],
       stablePageNumbers: DEFAULT_VIEW_CONFIG.stablePageNumbers,
+    });
+    recordChapterScreens('book-1', 2, 10);
+    currentRenderer = { page: 3, pages: 10 };
+
+    const { container } = renderProgressBar();
+
+    expect(container.querySelector('.progress-info-label')?.textContent).toBe('6 / 12');
+  });
+
+  it('keeps the stable byte-grid pair when explicitly enabled', () => {
+    setupFraction({
+      sections: [{ size: 1500 }, { size: 1500 }, { size: 15000 }],
+      stablePageNumbers: true,
     });
     recordChapterScreens('book-1', 2, 10);
     currentRenderer = { page: 3, pages: 10 };

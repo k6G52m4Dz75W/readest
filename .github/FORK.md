@@ -33,6 +33,7 @@
 | `src/utils/telemetry.ts` + `.env` | `c33ef356a` | 关闭遥测(PostHog 全路径杀) | 永久 |
 | `__tests__/…/ControlPanelUpdateReset.test.tsx` | `7747eeaa9` | 测试期望跟随 fork 默认渠道(nightly) | 默认值再变时随之更新 |
 | manifest notes 编号(含于 `56b4abd1d`) | 同上 | 适配兜底解析器(#7775 被拒,长期有效) | 我们自己改 notes 格式时重审 |
+| `services/constants.ts` + `FoliateViewer.tsx` + `screenPages.ts` + `ControlPanel.tsx`(6 处守卫) | (本次提交) | Stable Page Numbers 默认关闭:屏幕页数为默认,显式开启才是 stable(e-ink 避开 stable 校准/重排抖动,#3271 线;固定排版书与滚动模式仍显示 stable 数,同上游显式 OFF 用户状态) | 上游翻转默认时删除 |
 
 ## Update protocol
 
