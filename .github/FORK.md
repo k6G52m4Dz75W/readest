@@ -11,7 +11,8 @@
 
 - **`.github/workflows/nightly-dist.yml`** — fork 专属 CI:每日 06:18(北京,实际触发
   受 GitHub 调度积压影响约 +5h)合并上游 → 双平台构建 → minisign 签名 → manifest
-  组装(latest.json + release-notes.json)→ rolling `nightly` release(7 版滚动保留)。
+  组装(latest.json + release-notes.json)→ rolling `nightly` release(7 版滚动保留),
+  发布时自动从 `.github/FORK.md` 刷新 release 正文。
   上游无此文件。App 内更新渠道指向本 release。
 - **`.github/workflows/` 其余文件** = 冻结快照(GITHUB_TOKEN 不能推 workflow 文件,
   平台硬规则)。非 workflow 的 `.github`(模板/scripts)**自动流入**,不冻结。

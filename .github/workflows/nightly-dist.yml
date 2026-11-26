@@ -330,3 +330,21 @@ jobs:
           echo "Assembled latest.json platforms:"
           jq -r '.platforms | keys[]' latest.json
           gh release upload nightly latest.json release-notes.json --clobber --repo "$GITHUB_REPOSITORY"
+
+      - name: Sync release body from .github/FORK.md
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/contents/.github/FORK.md" \
+            -H "Accept: application/vnd.github.raw+json" > FORK.md
+          [ -s FORK.md ] || { echo "::warning::FORK.md missing — release body left unchanged"; exit 0; }
+          cat > body-header.md <<'EOF'
+          Personal nightly builds of the `dist` branch, based on Readest (AGPL-3.0).
+          Assets are replaced in place on every build; per-build commit changelogs live in `release-notes.json` (and in the app's update dialog).
+
+          ---
+
+          EOF
+          cat body-header.md FORK.md > release-body.md
+          gh release edit nightly --notes-file release-body.md --repo "$GITHUB_REPOSITORY"
