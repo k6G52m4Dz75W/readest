@@ -49,6 +49,7 @@ import AccountActions from './components/AccountActions';
 import StorageManager from './components/StorageManager';
 import SharedLinksSection from './components/SharedLinksSection';
 import { SyncPassphraseSection } from './components/SyncPassphraseSection';
+import { SyncDevicesSection } from './components/SyncDevicesSection';
 import { SyncCategoriesSection } from './components/SyncCategoriesSection';
 import Checkout from './components/Checkout';
 import GiftCardsSection, { GiftCardsView } from './components/gift/GiftCardsSection';
@@ -213,7 +214,10 @@ const ProfilePage = () => {
       refresh();
     } else if (showSharedLinksManager) {
       setShowSharedLinksManager(false);
-    } else if (showSyncManager) {
+    } else if (showSyncManager && searchParams?.get('section') !== 'sync') {
+      // Back returns to the account page only when Manage Sync was opened
+      // there. Opened at section=sync (the library's Sync Settings), Back
+      // leaves the page below.
       setShowSyncManager(false);
     } else if (giftView) {
       setGiftView(null);
@@ -495,8 +499,12 @@ const ProfilePage = () => {
                   </div>
                 ) : showSyncManager ? (
                   <div className='flex flex-col gap-y-8 px-6'>
-                    <SyncCategoriesSection />
+                    <SyncCategoriesSection
+                      userPlan={userProfilePlan}
+                      customizationPurchased={customizationPurchased}
+                    />
                     <SyncPassphraseSection />
+                    <SyncDevicesSection />
                   </div>
                 ) : giftView ? (
                   // Without the account block above it, the buy page clears the
