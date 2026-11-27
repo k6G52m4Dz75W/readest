@@ -15,13 +15,14 @@
   上游无此文件。App 内更新渠道指向本 release。
 - **`.github/workflows/` 其余文件** = 冻结快照(GITHUB_TOKEN 不能推 workflow 文件,
   平台硬规则)。非 workflow 的 `.github`(模板/scripts)**自动流入**,不冻结。
-  - 吸收基线:2026-11-27(dependabot actions 组 bump #7964,6 文件;上游 main
-    6b236e9a5)。
-  - 冻结时 bot 自动在 [issue #1](https://github.com/k6G52m4Dz75W/readest/issues/1)
-    @k6G52m4Dz75W(邮件通知)。
-  - 吸收配方:`git checkout upstream/main -- .github/workflows && git checkout
-    origin/dist -- .github/workflows/nightly-dist.yml`;新出现的 workflow 文件吸收后
-    必须 API disable(全仓库仅 nightly-dist.yml 应为 active,当前 15 个 workflow)。
+  冻结发生后 `ABSORB_PAT` 自动吸收(成功静默,吸收记录见 git 历史;
+  失败时 bot 在 [issue #1](https://github.com/k6G52m4Dz75W/readest/issues/1)
+  @k6G52m4Dz75W 邮件通知人工吸收)。
+  - 吸收基线:2026-11-27(详情见 issue #1 与 git 历史)。
+  - 手动吸收配方(自动吸收失败时):`git checkout upstream/main --
+    .github/workflows && git checkout origin/dist --
+    .github/workflows/nightly-dist.yml`;新出现的 workflow 文件吸收后必须
+    API disable(全仓库仅 nightly-dist.yml 应为 active,当前 15 个 workflow)。
   - ⚠️ 上游的 `nightly.yml`/`release.yml` 是 disabled 镜像文件,改它们 = 白干。
 
 ## Behavior patches(易冲突,上游漂移后需重放)

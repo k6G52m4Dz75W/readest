@@ -63,32 +63,37 @@ jobs:
             fi
             git push origin dist
           fi
-      - name: Notify on workflow freeze (mention owner)
+      - name: Auto-absorb frozen workflow updates (silent on success, notify on failure)
         if: ${{ steps.merge.outputs.frozen != '' }}
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          FROZEN: ${{ steps.merge.outputs.frozen }}
+          ABSORB_PAT: ${{ secrets.ABSORB_PAT }}
         run: |
-          BODY=$(printf '%s\n' \
-            "Upstream touched \`.github/workflows\`; the nightly build auto-froze it (GITHUB_TOKEN cannot push workflow files)." \
-            "Non-workflow \`.github\` updates were absorbed automatically. Absorb workflow updates locally if desired:" \
-            "" \
-            "\`git checkout upstream/main -- .github/workflows && git checkout origin/dist -- .github/workflows/nightly-dist.yml\`" \
-            "" \
-            "Frozen diff:" \
-            '```' \
-            "$FROZEN" \
-            '```' \
-            "@k6G52m4Dz75W")
-          ISSUE=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open \
-            --search "upstream workflow freeze log in:title" --json number --jq '.[0].number')
-          if [ -n "$ISSUE" ]; then
-            gh issue comment "$ISSUE" --repo "$GITHUB_REPOSITORY" --body "$BODY"
-          else
-            gh issue create --repo "$GITHUB_REPOSITORY" \
-              --title "Upstream workflow freeze log" --body "$BODY"
+          notify() {
+            printf '%s\n' \
+              '⚠️ Upstream workflow changes were frozen but auto-absorb failed. Manual absorb needed:' \
+              '`git checkout upstream/main -- .github/workflows && git checkout origin/dist -- .github/workflows/nightly-dist.yml`' \
+              "Reason: $1." \
+              '@k6G52m4Dz75W' > notify-body.md
+            gh issue comment 1 --repo "$GITHUB_REPOSITORY" --body-file notify-body.md
+          }
+          if [ -z "${ABSORB_PAT:-}" ]; then
+            notify "ABSORB_PAT secret not configured"
+            exit 0
           fi
+          git remote add auth "https://x-access-token:${ABSORB_PAT}@github.com/$GITHUB_REPOSITORY.git"
+          # Take upstream's workflows wholesale, then restore the fork-only file.
+          git checkout upstream/main -- .github/workflows
+          git checkout HEAD -- .github/workflows/nightly-dist.yml
+          if git diff --cached --quiet -- .github/workflows; then
+            echo "nothing to absorb"
+            exit 0
+          fi
+          sed -i -E "s/吸收基线:[0-9]{4}-[0-9]{2}-[0-9]{2}/吸收基线:$(date -u +%Y-%m-%d)/" .github/FORK.md
+          git add .github/FORK.md
+          git commit -q -m "ci: auto-absorb upstream workflow updates" || { notify "absorb commit failed"; exit 0; }
+          git push "auth" "HEAD:refs/heads/dist" || { notify "PAT push rejected (expired/revoked/insufficient scope?)"; exit 0; }
       - name: Collect upstream commits since last build
         id: notes
         run: |
