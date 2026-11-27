@@ -15,8 +15,8 @@
   上游无此文件。App 内更新渠道指向本 release。
 - **`.github/workflows/` 其余文件** = 冻结快照(GITHUB_TOKEN 不能推 workflow 文件,
   平台硬规则)。非 workflow 的 `.github`(模板/scripts)**自动流入**,不冻结。
-  - 吸收基线:2026-11-23(WebKit PR-CI 更新);已知待吸收:2026-11-26 dependabot
-    actions 组 bump(#7964),下次构建自动冻结并在 issue #1 通知。
+  - 吸收基线:2026-11-27(dependabot actions 组 bump #7964,6 文件;上游 main
+    6b236e9a5)。
   - 冻结时 bot 自动在 [issue #1](https://github.com/k6G52m4Dz75W/readest/issues/1)
     @k6G52m4Dz75W(邮件通知)。
   - 吸收配方:`git checkout upstream/main -- .github/workflows && git checkout
